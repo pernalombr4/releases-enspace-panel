@@ -1,0 +1,39 @@
+{
+  "name": "releases-enspace-panel",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "typecheck": "nuxt typecheck",
+    "test": "vitest run",
+    "demo:data": "tsx scripts/encrypt-data.ts --demo fixtures/demo.json public/data/releases.enc.json",
+    "encrypt": "tsx scripts/encrypt-data.ts"
+  },
+  "dependencies": {
+    "@iconify-json/lucide": "^1.2.137",
+    "@nuxt/ui": "^4.11.2",
+    "@vueuse/core": "^14.4.0",
+    "@vueuse/nuxt": "^14.4.0",
+    "date-fns": "^4.4.0",
+    "nuxt": "^4.5.2",
+    "tailwindcss": "^4.3.3",
+    "vue": "^3.5.43",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "^1.17.0",
+    "eslint": "^10.11.0",
+    "eslint-plugin-better-tailwindcss": "^4.7.0",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.3",
+    "vue-tsc": "^3.3.11"
+  },
+  "packageManager": "pnpm@12.6.0",
+  "description": "Painel de status das próximas releases do ENSPACE (somente a página; os dados ficam em um repositório privado)."
+}

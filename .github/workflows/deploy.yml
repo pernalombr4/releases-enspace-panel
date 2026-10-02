@@ -1,0 +1,80 @@
+# Publica o painel no GitHub Pages.
+#
+# Roda a cada push na main: mudanças de código ou um novo data/releases.enc.json
+# enviado pelo repositório privado de dados. Este repositório nunca tem dados
+# abertos; o arquivo publicado é criptografado com a senha do painel.
+name: Publicar painel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Install node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Test
+        run: pnpm run test
+
+      - name: Dados criptografados
+        run: |
+          mkdir -p public/data
+          if [ -f data/releases.enc.json ]; then
+            cp data/releases.enc.json public/data/releases.enc.json
+          else
+            echo "::warning::data/releases.enc.json ainda não existe; publicando os dados de demonstração (senha: demo)."
+            pnpm run demo:data
+          fi
+
+      - name: Generate
+        run: pnpm run generate
+        env:
+          NUXT_APP_BASE_URL: /${{ github.event.repository.name }}/
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: ./.output/public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
