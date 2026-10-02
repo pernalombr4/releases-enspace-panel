@@ -46,9 +46,16 @@ export function daysUntil(day: string, now: Date): number {
  * Saúde da release. O valor informado pelo time de Produto sempre vence;
  * sem ele, o painel deduz a partir do prazo e dos bloqueios.
  */
+/** Release oficialmente adiada (informado pelo time ou pelo Enspace). */
+export function isPostponed(release: Release): boolean {
+  return release.postponement?.postponed === true
+}
+
 export function releaseHealth(release: Release, now: Date): ReleaseHealth {
   if (release.health) return release.health
   if (release.stage === 'released') return 'on_track'
+  // Adiada e sem nova data: não há prazo a cumprir ainda.
+  if (isPostponed(release) && !release.targetDate) return 'delayed'
 
   const blocked = release.items.some(i => i.status === 'blocked')
   if (!release.targetDate) return blocked ? 'at_risk' : 'on_track'

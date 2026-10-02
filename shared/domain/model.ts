@@ -73,6 +73,21 @@ export const ReleaseItemSchema = z.object({
   updatedAt: timestamp
 })
 
+/**
+ * Adiamento oficial da release, comunicado publicamente no painel.
+ * A nova data de subida é a própria `targetDate` da release.
+ */
+export const PostponementSchema = z.object({
+  /** true = release adiada; false = data mantida. */
+  postponed: z.boolean(),
+  /** Data de subida antes do adiamento (AAAA-MM-DD). */
+  originalDate: isoDate.optional(),
+  /** Motivo, em linguagem pública. */
+  reason: optionalText,
+  /** Quando o adiamento foi comunicado. */
+  announcedAt: timestamp.optional()
+})
+
 export const ReleaseSchema = z.object({
   version: z.string().min(1),
   name: optionalText,
@@ -83,6 +98,8 @@ export const ReleaseSchema = z.object({
   healthNote: optionalText,
   targetDate: isoDate.optional(),
   releasedAt: isoDate.optional(),
+  /** Adiada ou não. Sem este bloco, o painel não afirma nada sobre adiamento. */
+  postponement: PostponementSchema.optional(),
   owner: optionalText,
   milestones: z.array(MilestoneSchema).default([]),
   links: z.array(LinkSchema).optional(),
@@ -99,6 +116,7 @@ export const ReleasesFileSchema = z.object({
 
 export type Link = z.infer<typeof LinkSchema>
 export type Milestone = z.infer<typeof MilestoneSchema>
+export type Postponement = z.infer<typeof PostponementSchema>
 export type ReleaseItem = z.infer<typeof ReleaseItemSchema>
 export type Release = z.infer<typeof ReleaseSchema>
 export type ReleasesFile = z.infer<typeof ReleasesFileSchema>

@@ -35,7 +35,9 @@ export default defineNuxtConfig({
       // Arquivo criptografado publicado pelo repositório privado de dados.
       dataUrl: 'data/releases.enc.json',
       refreshSeconds: 60,
-      enspaceAppUrl: 'https://be.enspace.io'
+      enspaceAppUrl: 'https://be.enspace.io',
+      // Endpoint do Enspace que informa se cada release foi adiada (definido na integração).
+      postponementUrl: ''
     }
   },
 

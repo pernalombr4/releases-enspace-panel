@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { formatCountdown, formatDay } from '#shared/domain/format'
-import { scopedItems } from '#shared/domain/metrics'
+import { isPostponed, scopedItems } from '#shared/domain/metrics'
 
 const route = useRoute()
 const { data, releases, nextRelease } = useReleases()
@@ -45,10 +45,12 @@ useSeoMeta({ title: () => `Release ${version.value} · ENSPACE Releases` })
 
         <template #right>
           <UBadge
-            v-if="release?.targetDate && release.stage !== 'released'"
-            :label="`Subida ${formatDay(release.targetDate)} · ${formatCountdown(release.targetDate, now)}`"
-            icon="i-lucide-calendar-days"
-            color="neutral"
+            v-if="release && release.stage !== 'released' && (release.targetDate || isPostponed(release))"
+            :label="release.targetDate
+              ? `${isPostponed(release) ? 'Nova data' : 'Subida'} ${formatDay(release.targetDate)} · ${formatCountdown(release.targetDate, now)}`
+              : 'Nova data a definir'"
+            :icon="isPostponed(release) ? 'i-lucide-calendar-x' : 'i-lucide-calendar-days'"
+            :color="isPostponed(release) ? 'warning' : 'neutral'"
             variant="outline"
           />
         </template>

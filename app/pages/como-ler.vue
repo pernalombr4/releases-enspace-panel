@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BOARD_ORDER, ITEM_STATUS, RELEASE_HEALTH_META, RELEASE_STAGE } from '#shared/domain/labels'
+import { BOARD_ORDER, ITEM_STATUS, POSTPONEMENT_META, RELEASE_HEALTH_META, RELEASE_STAGE } from '#shared/domain/labels'
 import { RELEASE_HEALTH, RELEASE_STAGES } from '#shared/domain/vocabulary'
 
 useSeoMeta({ title: 'Como ler o painel · ENSPACE Releases' })
@@ -47,6 +47,28 @@ const statuses = [...BOARD_ORDER.filter(s => s !== 'blocked'), 'blocked' as cons
               </dt>
               <dd class="text-sm text-muted">
                 {{ RELEASE_STAGE[s].description }}
+              </dd>
+            </div>
+          </dl>
+        </UPageCard>
+
+        <UPageCard
+          title="Adiamento"
+          description="Indica publicamente se a data de subida da release foi adiada ou mantida. Quando adiada, o resumo da release mostra a data original, a nova data e o motivo."
+          variant="subtle"
+        >
+          <dl class="flex flex-col gap-3">
+            <div v-for="meta in [POSTPONEMENT_META.postponed, POSTPONEMENT_META.kept]" :key="meta.label" class="grid gap-1 sm:grid-cols-[13rem_1fr] sm:gap-4">
+              <dt>
+                <UBadge
+                  :label="meta.label"
+                  :icon="meta.icon"
+                  :color="meta.color"
+                  :variant="meta === POSTPONEMENT_META.postponed ? 'solid' : 'outline'"
+                />
+              </dt>
+              <dd class="text-sm text-muted">
+                {{ meta.description }}
               </dd>
             </div>
           </dl>

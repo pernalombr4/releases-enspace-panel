@@ -26,6 +26,7 @@ Enquanto `data/releases.enc.json` não existir, a publicação usa os dados fict
 - **Visão geral da release:** fase, saúde (no prazo, em atenção ou atrasada), data de subida com contagem regressiva, próximo marco, % de itens prontos, distribuição por status, linha do tempo, pontos de atenção para as áreas e atualizações recentes.
 - **Itens:** quadro por status ou lista, com busca e filtros (tudo fica na URL, para compartilhar a visão), e detalhes do item numa gaveta lateral.
 - **Busca global (Ctrl/⌘ + K)** por release ou item.
+- **Adiamento público:** cada release mostra se foi **adiada** ou teve a **data mantida**. Quando adiada, aparecem a data original, a nova data e o motivo.
 - **Como ler o painel:** glossário dos status.
 - **Atualização automática** a cada 60 s, pausada com a aba em segundo plano. Itens que mudaram ficam destacados por alguns segundos.
 
@@ -57,6 +58,15 @@ fixtures/demo.json   dados fictícios para desenvolvimento
 ### MCP do Nuxt e do Nuxt UI
 
 O `.mcp.json` registra os servidores MCP oficiais (`https://ui.nuxt.com/mcp` e `https://nuxt.com/mcp`). Com eles, assistentes como o Claude Code consultam a documentação atual dos componentes ao trabalhar neste projeto.
+
+## Endpoint de adiamento do Enspace
+
+O "adiada ou não" pode vir de duas fontes:
+
+1. **Arquivo de dados** (padrão): o bloco `postponement` de cada release, mantido no repositório privado.
+2. **Endpoint do Enspace** (quando a integração estiver pronta): defina a variável do repositório **Settings → Secrets and variables → Actions → Variables → `POSTPONEMENT_URL`** e publique de novo. O painel passa a consultar esse endereço a cada atualização, e o que vier dele prevalece sobre o arquivo.
+
+O leitor (`shared/enspace/postponement.ts`) já aceita as variações mais prováveis de formato: lista direta ou em envelope (`data`, `items`...), registro do Enspace (`{ data: {...} }`), campos em inglês ou português (`postponed`/`adiada`, `original_target_date`/`data_original`, `new_target_date`/`nova_data`, `reason`/`motivo`) e datas `AAAA-MM-DD` ou `DD/MM/AAAA`. Se o formato real for diferente, o ajuste fica em `FIELD_ALIASES` nesse arquivo. Como o navegador chama esse endereço diretamente, ele precisa ser público (sem chave de API) e aceitar CORS.
 
 ## Publicação
 

@@ -33,7 +33,11 @@ export const RELEASE_FIELDS = {
   targetDate: 'target_date',
   releasedAt: 'released_at',
   owner: 'owner',
-  releaseNotesUrl: 'release_notes_url'
+  releaseNotesUrl: 'release_notes_url',
+  postponed: 'postponed',
+  originalTargetDate: 'original_target_date',
+  postponedReason: 'postponed_reason',
+  postponedAt: 'postponed_at'
 } as const
 
 /** Campos de data do Type de release que viram marcos na linha do tempo. */
@@ -153,6 +157,23 @@ export function mapItem(record: EnspaceRecord): { version?: string, input: unkno
   }
 }
 
+/** Só informa adiamento quando o campo "adiada" foi preenchido (sim ou não). */
+export function postponementFrom(value: {
+  postponed?: boolean
+  originalDate?: string
+  reason?: string
+  announcedAt?: string
+}) {
+  if (value.postponed === undefined) return undefined
+  return {
+    postponed: value.postponed,
+    originalDate: value.originalDate,
+    reason: value.reason,
+    // Data de comunicação inválida não deve derrubar a informação de adiamento.
+    announcedAt: value.announcedAt && !Number.isNaN(Date.parse(value.announcedAt)) ? value.announcedAt : undefined
+  }
+}
+
 export function mapRelease(record: EnspaceRecord): unknown {
   const f = RELEASE_FIELDS
   const get = (name: string) => field(record, name)
@@ -169,6 +190,12 @@ export function mapRelease(record: EnspaceRecord): unknown {
     healthNote: text(get(f.healthNote)),
     targetDate: day(get(f.targetDate)),
     releasedAt: day(get(f.releasedAt)),
+    postponement: postponementFrom({
+      postponed: bool(get(f.postponed)),
+      originalDate: day(get(f.originalTargetDate)),
+      reason: text(get(f.postponedReason)),
+      announcedAt: text(get(f.postponedAt))
+    }),
     owner: text(get(f.owner)),
     milestones,
     links: link(get(f.releaseNotesUrl), 'Release notes'),

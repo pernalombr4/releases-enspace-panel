@@ -130,3 +130,18 @@ export const RELEASE_HEALTH_META: Record<ReleaseHealth, Meta> = {
     icon: 'i-lucide-clock-alert'
   }
 }
+
+export const POSTPONEMENT_META = {
+  postponed: {
+    label: 'Adiada',
+    description: 'A data de subida foi oficialmente adiada. Veja a nova data e o motivo no resumo da release.',
+    color: 'warning',
+    icon: 'i-lucide-calendar-x'
+  },
+  kept: {
+    label: 'Data mantida',
+    description: 'A release não foi adiada: a data de subida segue a planejada.',
+    color: 'success',
+    icon: 'i-lucide-calendar-check'
+  }
+} satisfies Record<'postponed' | 'kept', Meta>

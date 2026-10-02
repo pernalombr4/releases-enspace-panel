@@ -2,6 +2,7 @@ import { createSharedComposable, useDocumentVisibility, useIntervalFn } from '@v
 import { WrongKeyError, decryptJson, isEncryptedFile, type EncryptedFile } from '#shared/domain/crypto'
 import { changedItemIds, defaultRelease } from '#shared/domain/metrics'
 import { ReleasesFileSchema, compareVersions, describeIssues, type ReleasesFile } from '#shared/domain/model'
+import { applyPostponements, parsePostponements, type PostponementUpdate } from '#shared/enspace/postponement'
 
 export interface LoadError {
   message: string
@@ -26,6 +27,7 @@ const _useReleases = () => {
   const loading = ref(false)
   const fetchedAt = ref<string | null>(null)
   const changed = ref<Set<string>>(new Set())
+  const postponements = shallowRef<PostponementUpdate[]>([])
 
   const url = `${config.app.baseURL}${config.public.dataUrl}`
 
@@ -51,9 +53,25 @@ const _useReleases = () => {
     error.value = null
   }
 
+  /**
+   * Endpoint de adiamento do Enspace (opcional, NUXT_PUBLIC_POSTPONEMENT_URL).
+   * Quando configurado, sobrepõe o "adiada ou não" publicado no arquivo.
+   * Uma falha aqui não interrompe o painel: fica valendo o último dado.
+   */
+  async function refreshPostponements() {
+    const endpoint = config.public.postponementUrl
+    if (!endpoint) return
+    try {
+      postponements.value = parsePostponements(await $fetch<unknown>(endpoint, { query: { t: Date.now() }, cache: 'no-store' }))
+    } catch (err) {
+      console.warn('Não foi possível ler o endpoint de adiamento das releases.', err)
+    }
+  }
+
   async function refresh() {
     if (loading.value) return
     loading.value = true
+    void refreshPostponements()
     try {
       const encrypted = await fetchFile()
       fetchedAt.value = new Date().toISOString()
@@ -94,7 +112,7 @@ const _useReleases = () => {
     if (value.size) setTimeout(() => (changed.value = new Set()), HIGHLIGHT_MS)
   })
 
-  const releases = computed(() => data.value?.releases ?? [])
+  const releases = computed(() => applyPostponements(data.value?.releases ?? [], postponements.value))
   const nextRelease = computed(() => defaultRelease(releases.value))
 
   return { file, data, releases, nextRelease, error, loading, fetchedAt, changed, refresh, fetchFile }

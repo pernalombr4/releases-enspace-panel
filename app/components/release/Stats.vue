@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { formatCountdown, formatDay, formatDayYear, plural } from '#shared/domain/format'
-import { countByStatus, nextMilestone, releaseProgress, scopedItems } from '#shared/domain/metrics'
+import { countByStatus, isPostponed, nextMilestone, releaseProgress, scopedItems } from '#shared/domain/metrics'
 import type { Release } from '#shared/domain/model'
 
 const props = defineProps<{ release: Release }>()
@@ -13,11 +13,16 @@ const stats = computed(() => {
   const milestone = nextMilestone(r, now.value)
   const released = r.stage === 'released'
 
+  const postponed = !released && isPostponed(r)
+  const original = r.postponement?.originalDate
+
   return [{
-    title: released ? 'Liberada em' : 'Subida prevista',
-    icon: 'i-lucide-calendar-days',
+    title: released ? 'Liberada em' : postponed ? 'Nova data de subida' : 'Subida prevista',
+    icon: postponed ? 'i-lucide-calendar-x' : 'i-lucide-calendar-days',
     value: released && r.releasedAt ? formatDayYear(r.releasedAt) : r.targetDate ? formatDay(r.targetDate) : 'A definir',
-    badge: !released && r.targetDate ? { label: formatCountdown(r.targetDate, now.value), color: 'neutral' as const } : undefined
+    badge: postponed
+      ? { label: original ? `adiada · antes ${formatDay(original)}` : 'adiada', color: 'warning' as const }
+      : !released && r.targetDate ? { label: formatCountdown(r.targetDate, now.value), color: 'neutral' as const } : undefined
   }, {
     title: 'Progresso',
     icon: 'i-lucide-chart-no-axes-column-increasing',

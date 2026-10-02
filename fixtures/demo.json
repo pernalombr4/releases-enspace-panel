@@ -8,13 +8,31 @@
       "summary": "Conteúdo fictício para desenvolver e testar o painel localmente. Os dados reais ficam no repositório privado.",
       "stage": "development",
       "targetDate": "2026-10-30",
+      "postponement": {
+        "postponed": false
+      },
       "owner": "Time de Produto",
       "milestones": [
-        { "label": "Escopo fechado", "date": "2026-09-15" },
-        { "label": "Code freeze", "date": "2026-10-16" },
-        { "label": "Início da homologação", "date": "2026-10-19" },
-        { "label": "Subida para produção", "date": "2026-10-30" },
-        { "label": "Comunicação aos clientes", "date": "2026-11-03" }
+        {
+          "label": "Escopo fechado",
+          "date": "2026-09-15"
+        },
+        {
+          "label": "Code freeze",
+          "date": "2026-10-16"
+        },
+        {
+          "label": "Início da homologação",
+          "date": "2026-10-19"
+        },
+        {
+          "label": "Subida para produção",
+          "date": "2026-10-30"
+        },
+        {
+          "label": "Comunicação aos clientes",
+          "date": "2026-11-03"
+        }
       ],
       "items": [
         {
@@ -146,11 +164,26 @@
       "summary": "Segunda release fictícia.",
       "stage": "planning",
       "targetDate": "2026-12-11",
+      "postponement": {
+        "postponed": true,
+        "originalDate": "2026-12-04",
+        "reason": "Exemplo: ajuste de escopo depois da homologação da 1.1.",
+        "announcedAt": "2026-10-01T15:00:00-03:00"
+      },
       "owner": "Time de Produto",
       "milestones": [
-        { "label": "Escopo fechado", "date": "2026-10-23" },
-        { "label": "Code freeze", "date": "2026-11-27" },
-        { "label": "Subida para produção", "date": "2026-12-11" }
+        {
+          "label": "Escopo fechado",
+          "date": "2026-10-23"
+        },
+        {
+          "label": "Code freeze",
+          "date": "2026-11-27"
+        },
+        {
+          "label": "Subida para produção",
+          "date": "2026-12-11"
+        }
       ],
       "items": [
         {

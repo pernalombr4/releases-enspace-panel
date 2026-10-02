@@ -87,3 +87,15 @@ describe('compareVersions', () => {
     expect(['3.10', '3.2', '3.1'].sort(compareVersions)).toEqual(['3.1', '3.2', '3.10'])
   })
 })
+
+describe('adiamento', () => {
+  it('release adiada sem nova data fica atrasada', () => {
+    const r = release({ postponement: { postponed: true, originalDate: '2026-10-30' } })
+    expect(releaseHealth(r, now)).toBe('delayed')
+  })
+
+  it('release adiada com nova data é avaliada pela nova data', () => {
+    const r = release({ targetDate: '2026-12-01', postponement: { postponed: true, originalDate: '2026-10-30' } })
+    expect(releaseHealth(r, now)).toBe('on_track')
+  })
+})

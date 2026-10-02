@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { CommandPaletteGroup, CommandPaletteItem, NavigationMenuItem } from '@nuxt/ui'
 import { ITEM_STATUS } from '#shared/domain/labels'
+import { isPostponed } from '#shared/domain/metrics'
 
 const config = useRuntimeConfig()
 const { releases, nextRelease } = useReleases()
@@ -17,7 +18,9 @@ const links = computed(() => [
     label: `Release ${release.version}`,
     icon: release.stage === 'released' ? 'i-lucide-rocket' : 'i-lucide-calendar-range',
     to: `/releases/${release.version}`,
-    badge: release.version === nextRelease.value?.version ? 'Próxima' : undefined,
+    badge: isPostponed(release) && release.stage !== 'released'
+      ? { label: 'Adiada', color: 'warning' as const, variant: 'subtle' as const }
+      : release.version === nextRelease.value?.version ? 'Próxima' : undefined,
     onSelect: close
   })),
   [{

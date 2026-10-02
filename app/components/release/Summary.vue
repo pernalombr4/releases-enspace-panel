@@ -1,7 +1,20 @@
 <script setup lang="ts">
+import { formatDateTime, formatDayYear } from '#shared/domain/format'
 import type { Release } from '#shared/domain/model'
 
-defineProps<{ release: Release, eyebrow: string }>()
+const props = defineProps<{ release: Release, eyebrow: string }>()
+
+const postponedText = computed(() => {
+  const info = props.release.postponement
+  if (!info?.postponed) return undefined
+  const from = info.originalDate ? `prevista para ${formatDayYear(info.originalDate)}` : 'prevista'
+  const to = props.release.targetDate ? `foi adiada para ${formatDayYear(props.release.targetDate)}` : 'foi adiada; a nova data ainda será definida'
+  return [
+    `A subida ${from} ${to}.`,
+    info.reason && `Motivo: ${info.reason}`,
+    info.announcedAt && `Comunicado em ${formatDateTime(info.announcedAt)}.`
+  ].filter(Boolean).join(' ')
+})
 </script>
 
 <template>
@@ -16,6 +29,14 @@ defineProps<{ release: Release, eyebrow: string }>()
 
     <div class="flex flex-col gap-3">
       <ReleaseBadges :release="release" />
+      <UAlert
+        v-if="postponedText"
+        color="warning"
+        variant="subtle"
+        icon="i-lucide-calendar-x"
+        title="Release adiada"
+        :description="postponedText"
+      />
       <UAlert
         v-if="release.healthNote"
         color="warning"
