@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.137",
+    "@internationalized/date": "^3.12.4",
     "@nuxt/ui": "^4.11.2",
     "@vueuse/core": "^14.4.0",
     "@vueuse/nuxt": "^14.4.0",

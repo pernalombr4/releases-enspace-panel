@@ -3,6 +3,23 @@
   "updatedAt": "2026-10-02T18:40:00-03:00",
   "releases": [
     {
+      "version": "1.0",
+      "releasedAt": "2026-06-15",
+      "name": "Lançamento da plataforma (exemplo)"
+    },
+    {
+      "version": "1.0.1",
+      "releasedAt": "2026-07-02"
+    },
+    {
+      "version": "1.0.2",
+      "releasedAt": "2026-08-20"
+    },
+    {
+      "version": "1.0.3",
+      "releasedAt": "2026-09-24"
+    },
+    {
       "version": "1.1",
       "name": "Demonstração",
       "summary": "Conteúdo fictício para desenvolver e testar o painel localmente. Os dados reais ficam no repositório privado.",
@@ -220,6 +237,17 @@
           "updatedAt": "2026-09-26T16:30:00-03:00"
         }
       ]
+    },
+    {
+      "version": "1.1.1",
+      "targetDate": "2026-11-13",
+      "name": "Correções pós-1.1 (exemplo)"
+    },
+    {
+      "version": "2.0",
+      "targetDate": "2027-03-05",
+      "name": "Nova geração (exemplo)",
+      "summary": "Release major fictícia, para demonstrar o destaque no calendário."
     }
   ]
 }

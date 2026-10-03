@@ -1,4 +1,4 @@
-import type { ItemKind, ItemStatus, Level, ReleaseHealth, ReleaseStage } from './vocabulary'
+import type { ItemKind, ItemStatus, Level, ReleaseHealth, ReleaseStage, ReleaseType } from './vocabulary'
 
 /** Cores semânticas do Nuxt UI (definidas em app.config.ts). */
 export type UiColor = 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
@@ -145,3 +145,44 @@ export const POSTPONEMENT_META = {
     icon: 'i-lucide-calendar-check'
   }
 } satisfies Record<'postponed' | 'kept', Meta>
+
+/**
+ * Destaque de cada tipo de release no calendário: cor e peso visual diferentes,
+ * para major chamar mais atenção que minor, e minor mais que patch.
+ */
+export const RELEASE_TYPE_META: Record<ReleaseType, {
+  label: string
+  description: string
+  color: UiColor
+  variant: 'solid' | 'subtle' | 'outline'
+  rank: number
+}> = {
+  major: {
+    label: 'Major',
+    description: 'Grandes mudanças ou novos módulos; pode exigir adaptação dos clientes.',
+    color: 'primary',
+    variant: 'solid',
+    rank: 3
+  },
+  minor: {
+    label: 'Minor',
+    description: 'Novas funcionalidades e melhorias, sem quebrar o que já existe.',
+    color: 'secondary',
+    variant: 'subtle',
+    rank: 2
+  },
+  patch: {
+    label: 'Patch',
+    description: 'Correções e ajustes pontuais.',
+    color: 'neutral',
+    variant: 'outline',
+    rank: 1
+  }
+}
+
+/** Situação de uma release no calendário. */
+export const CALENDAR_STATUS_META: Record<'released' | 'postponed' | 'planned', Omit<Meta, 'description'>> = {
+  released: { label: 'Liberada', color: 'success', icon: 'i-lucide-rocket' },
+  postponed: { label: 'Adiada', color: 'warning', icon: 'i-lucide-calendar-x' },
+  planned: { label: 'Prevista', color: 'neutral', icon: 'i-lucide-calendar-clock' }
+}

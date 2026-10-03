@@ -25,6 +25,7 @@ export interface EnspaceRecord {
 
 export const RELEASE_FIELDS = {
   version: 'version',
+  type: 'release_type',
   name: 'name',
   summary: 'summary',
   stage: 'stage',
@@ -183,9 +184,12 @@ export function mapRelease(record: EnspaceRecord): unknown {
   })
   return {
     version: text(get(f.version)),
+    // Vazio = deduzido da versão (major/minor/patch).
+    type: text(get(f.type)),
     name: text(get(f.name)),
     summary: text(get(f.summary)),
-    stage: text(get(f.stage)) ?? text(record.status) ?? 'planning',
+    // Vazio = "liberada" se houver data de liberação, senão "em planejamento".
+    stage: text(get(f.stage)) ?? text(record.status),
     health: text(get(f.health)),
     healthNote: text(get(f.healthNote)),
     targetDate: day(get(f.targetDate)),

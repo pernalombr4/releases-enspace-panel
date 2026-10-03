@@ -38,6 +38,10 @@ export type ReleaseStage = (typeof RELEASE_STAGES)[number]
 export const RELEASE_HEALTH = ['on_track', 'at_risk', 'delayed'] as const
 export type ReleaseHealth = (typeof RELEASE_HEALTH)[number]
 
+/** Tipo da release, no sentido de versionamento semântico. */
+export const RELEASE_TYPES = ['major', 'minor', 'patch'] as const
+export type ReleaseType = (typeof RELEASE_TYPES)[number]
+
 const ALIASES = {
   status: {
     planned: ['planejado', 'cotado', 'a fazer', 'to do', 'todo', 'backlog', 'nao iniciado'],
@@ -72,6 +76,11 @@ const ALIASES = {
     on_track: ['no prazo', 'ok', 'on track', 'em dia'],
     at_risk: ['em atencao', 'atencao', 'em risco', 'risco'],
     delayed: ['atrasada', 'atrasado', 'atraso']
+  },
+  releaseType: {
+    major: ['maior', 'principal'],
+    minor: ['menor', 'intermediaria'],
+    patch: ['hotfix', 'correcao', 'correcoes', 'fix']
   }
 } satisfies Record<string, Record<string, string[]>>
 

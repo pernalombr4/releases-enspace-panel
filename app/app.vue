@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { pt_br } from '@nuxt/ui/locale'
+
 const colorMode = useColorMode()
 const color = computed(() => colorMode.value === 'dark' ? '#18181b' : 'white')
 
@@ -19,7 +21,7 @@ useSeoMeta({
 </script>
 
 <template>
-  <UApp :toaster="{ position: 'bottom-right' }">
+  <UApp :locale="pt_br" :toaster="{ position: 'bottom-right' }">
     <NuxtLoadingIndicator />
 
     <NuxtLayout>

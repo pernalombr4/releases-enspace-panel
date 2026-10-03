@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { CommandPaletteGroup, CommandPaletteItem, NavigationMenuItem } from '@nuxt/ui'
-import { ITEM_STATUS } from '#shared/domain/labels'
+import { releaseType } from '#shared/domain/calendar'
+import { ITEM_STATUS, RELEASE_TYPE_META } from '#shared/domain/labels'
 import { isPostponed } from '#shared/domain/metrics'
 
 const config = useRuntimeConfig()
@@ -13,16 +14,24 @@ const close = () => {
   open.value = false
 }
 
+// O menu mostra só as releases ainda por vir; as já liberadas ficam no calendário.
 const links = computed(() => [
-  releases.value.map(release => ({
-    label: `Release ${release.version}`,
-    icon: release.stage === 'released' ? 'i-lucide-rocket' : 'i-lucide-calendar-range',
-    to: `/releases/${release.version}`,
-    badge: isPostponed(release) && release.stage !== 'released'
-      ? { label: 'Adiada', color: 'warning' as const, variant: 'subtle' as const }
-      : release.version === nextRelease.value?.version ? 'Próxima' : undefined,
+  [{
+    label: 'Calendário',
+    icon: 'i-lucide-calendar-days',
+    to: '/calendario',
     onSelect: close
-  })),
+  }, ...releases.value
+    .filter(release => release.stage !== 'released')
+    .map(release => ({
+      label: `Release ${release.version}`,
+      icon: 'i-lucide-calendar-range',
+      to: `/releases/${release.version}`,
+      badge: isPostponed(release)
+        ? { label: 'Adiada', color: 'warning' as const, variant: 'subtle' as const }
+        : release.version === nextRelease.value?.version ? 'Próxima' : undefined,
+      onSelect: close
+    }))],
   [{
     label: 'Como ler o painel',
     icon: 'i-lucide-book-open',
@@ -41,10 +50,14 @@ const searchGroups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => [
   label: 'Releases',
   items: releases.value.map(release => ({
     label: `Release ${release.version}`,
-    suffix: release.name,
+    suffix: [RELEASE_TYPE_META[releaseType(release)].label, release.name].filter(Boolean).join(' · '),
     icon: 'i-lucide-calendar-range',
     to: `/releases/${release.version}`
   }))
+}, {
+  id: 'pages',
+  label: 'Páginas',
+  items: [{ label: 'Calendário de releases', icon: 'i-lucide-calendar-days', to: '/calendario' }]
 }, {
   id: 'items',
   label: 'Itens',

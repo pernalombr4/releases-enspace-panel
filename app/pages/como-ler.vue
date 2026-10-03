@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { BOARD_ORDER, ITEM_STATUS, POSTPONEMENT_META, RELEASE_HEALTH_META, RELEASE_STAGE } from '#shared/domain/labels'
-import { RELEASE_HEALTH, RELEASE_STAGES } from '#shared/domain/vocabulary'
+import { BOARD_ORDER, ITEM_STATUS, POSTPONEMENT_META, RELEASE_HEALTH_META, RELEASE_STAGE, RELEASE_TYPE_META } from '#shared/domain/labels'
+import { RELEASE_HEALTH, RELEASE_STAGES, RELEASE_TYPES } from '#shared/domain/vocabulary'
 
 useSeoMeta({ title: 'Como ler o painel · ENSPACE Releases' })
 
@@ -29,6 +29,21 @@ const statuses = [...BOARD_ORDER.filter(s => s !== 'blocked'), 'blocked' as cons
               <dt><ItemStatusBadge :status="s" /></dt>
               <dd class="text-sm text-muted">
                 {{ ITEM_STATUS[s].description }}
+              </dd>
+            </div>
+          </dl>
+        </UPageCard>
+
+        <UPageCard
+          title="Tipos de release"
+          description="No calendário, cada tipo tem um destaque diferente. Quando não é informado, o tipo vem da versão: 3.0 é major, 3.1 é minor e 3.1.2 é patch."
+          variant="subtle"
+        >
+          <dl class="flex flex-col gap-3">
+            <div v-for="t in RELEASE_TYPES" :key="t" class="grid gap-1 sm:grid-cols-[13rem_1fr] sm:gap-4">
+              <dt><ReleaseTypeBadge :type="t" /></dt>
+              <dd class="text-sm text-muted">
+                {{ RELEASE_TYPE_META[t].description }}
               </dd>
             </div>
           </dl>

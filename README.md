@@ -25,6 +25,7 @@ Enquanto `data/releases.enc.json` não existir, a publicação usa os dados fict
 
 - **Visão geral da release:** fase, saúde (no prazo, em atenção ou atrasada), data de subida com contagem regressiva, próximo marco, % de itens prontos, distribuição por status, linha do tempo, pontos de atenção para as áreas e atualizações recentes.
 - **Itens:** quadro por status ou lista, com busca e filtros (tudo fica na URL, para compartilhar a visão), e detalhes do item numa gaveta lateral.
+- **Calendário:** todas as releases (passadas e futuras) num calendário com destaque por tipo (**major** sólido, **minor** suave, **patch** contornado), filtro por tipo, lista do período e histórico completo em tabela. Releases antigas podem ter só versão e data; nesse caso aparecem como "sem detalhes registrados".
 - **Busca global (Ctrl/⌘ + K)** por release ou item.
 - **Adiamento público:** cada release mostra se foi **adiada** ou teve a **data mantida**. Quando adiada, aparecem a data original, a nova data e o motivo.
 - **Como ler o painel:** glossário dos status.

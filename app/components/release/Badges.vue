@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { releaseType } from '#shared/domain/calendar'
 import { POSTPONEMENT_META, RELEASE_HEALTH_META, RELEASE_STAGE } from '#shared/domain/labels'
 import { releaseHealth } from '#shared/domain/metrics'
 import type { Release } from '#shared/domain/model'
@@ -20,6 +21,7 @@ const postponement = computed(() => {
 
 <template>
   <div class="flex flex-wrap items-center gap-1.5">
+    <ReleaseTypeBadge :type="releaseType(release)" />
     <UTooltip :text="stage.description">
       <UBadge
         :label="stage.label"
@@ -36,7 +38,7 @@ const postponement = computed(() => {
         :variant="release.postponement?.postponed ? 'solid' : 'outline'"
       />
     </UTooltip>
-    <UTooltip :text="automatic ? `${health.description} (calculado pelo prazo e pelos bloqueios)` : health.description">
+    <UTooltip v-if="release.stage !== 'released'" :text="automatic ? `${health.description} (calculado pelo prazo e pelos bloqueios)` : health.description">
       <UBadge
         :label="health.label"
         :icon="health.icon"

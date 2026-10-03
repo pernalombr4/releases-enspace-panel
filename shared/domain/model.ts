@@ -5,6 +5,7 @@ import {
   LEVELS,
   RELEASE_HEALTH,
   RELEASE_STAGES,
+  RELEASE_TYPES,
   canonical
 } from './vocabulary'
 
@@ -90,9 +91,12 @@ export const PostponementSchema = z.object({
 
 export const ReleaseSchema = z.object({
   version: z.string().min(1),
+  /** major, minor ou patch. Quando vazio, é deduzido da versão (3.0 → major, 3.1 → minor, 3.1.2 → patch). */
+  type: enumOf('releaseType', RELEASE_TYPES).optional(),
   name: optionalText,
   summary: optionalText,
-  stage: enumOf('stage', RELEASE_STAGES),
+  /** Quando vazio: "released" se houver releasedAt, senão "planning" (releases antigas só com versão e data). */
+  stage: enumOf('stage', RELEASE_STAGES).optional(),
   /** Quando vazio, o painel calcula a partir de prazo e bloqueios. */
   health: enumOf('health', RELEASE_HEALTH).optional(),
   healthNote: optionalText,
@@ -104,7 +108,10 @@ export const ReleaseSchema = z.object({
   milestones: z.array(MilestoneSchema).default([]),
   links: z.array(LinkSchema).optional(),
   items: z.array(ReleaseItemSchema).default([])
-})
+}).transform(release => ({
+  ...release,
+  stage: release.stage ?? (release.releasedAt ? 'released' as const : 'planning' as const)
+}))
 
 export const ReleasesFileSchema = z.object({
   /** Marca o conteúdo como ilustrativo; o painel mostra um aviso. */
