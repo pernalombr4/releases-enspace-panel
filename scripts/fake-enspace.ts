@@ -38,7 +38,8 @@ export async function startFakeEnspace(fixture: FixtureFile, options: FakeEnspac
     const url = new URL(req.url ?? '/', 'http://127.0.0.1')
     requests.push(`${req.method} ${url.pathname}${url.search}`)
     const send = (status: number, body: unknown) => {
-      res.writeHead(status, { 'content-type': 'application/json' })
+      // Sem keep-alive: nenhuma conexão fica aberta para ser derrubada no close().
+      res.writeHead(status, { 'content-type': 'application/json', 'connection': 'close' })
       res.end(JSON.stringify(body))
     }
 
