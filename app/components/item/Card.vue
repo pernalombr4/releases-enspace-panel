@@ -31,8 +31,8 @@ const meta = computed(() => [
     </template>
 
     <UAlert
-      v-if="item.status === 'blocked' && item.note"
-      color="error"
+      v-if="(item.status === 'blocked' || item.atRisk) && item.note"
+      :color="item.status === 'blocked' ? 'error' : 'warning'"
       variant="subtle"
       :description="item.note"
       :ui="{ root: 'p-2', description: 'text-xs' }"
@@ -40,8 +40,8 @@ const meta = computed(() => [
 
     <div class="flex flex-wrap gap-1">
       <ItemKindBadge :kind="item.kind" />
+      <ItemFlags :item="item" class="contents" />
     </div>
-    <ItemFlags :item="item" />
 
     <p class="text-xs text-dimmed">
       <span v-if="changed" class="font-medium text-primary">Atualizado agora</span>

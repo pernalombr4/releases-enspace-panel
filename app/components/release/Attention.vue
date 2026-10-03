@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { hasMarker } from '#shared/domain/markers'
 import type { Release, ReleaseItem } from '#shared/domain/model'
 
 const props = defineProps<{ release: Release }>()
@@ -9,7 +10,7 @@ interface Group {
   title: string
   hint: string
   icon: string
-  color: 'error' | 'neutral'
+  color: 'error' | 'warning' | 'neutral'
   items: ReleaseItem[]
 }
 
@@ -22,6 +23,20 @@ const groups = computed(() => {
     icon: 'i-lucide-octagon-alert',
     color: 'error',
     items: active.filter(i => i.status === 'blocked')
+  }, {
+    key: 'atRisk',
+    title: 'Em risco',
+    hint: 'Podem não entrar nesta release',
+    icon: 'i-lucide-triangle-alert',
+    color: 'warning',
+    items: active.filter(i => i.atRisk && i.status !== 'blocked')
+  }, {
+    key: 'client',
+    title: 'Pedidos de clientes',
+    hint: 'CS e Comercial podem avisar quem pediu',
+    icon: 'i-lucide-handshake',
+    color: 'neutral',
+    items: active.filter(i => hasMarker(i, 'client'))
   }, {
     key: 'communication',
     title: 'Pedem comunicação a clientes',
@@ -64,7 +79,7 @@ const groups = computed(() => {
     <div v-if="groups.length" class="flex flex-col gap-5">
       <div v-for="group in groups" :key="group.key" class="flex flex-col gap-1">
         <div class="flex items-center gap-2">
-          <UIcon :name="group.icon" class="size-4 shrink-0" :class="group.color === 'error' ? 'text-error' : 'text-muted'" />
+          <UIcon :name="group.icon" class="size-4 shrink-0" :class="TEXT_COLOR[group.color]" />
           <h3 class="text-sm font-medium text-highlighted">
             {{ group.title }}
           </h3>
@@ -91,7 +106,7 @@ const groups = computed(() => {
               <span class="font-mono text-xs text-muted">{{ item.id }}</span>
               <span class="truncate">{{ item.title }}</span>
             </UButton>
-            <p v-if="group.key === 'blocked' && item.note" class="ps-2 pb-1 text-xs text-muted">
+            <p v-if="(group.key === 'blocked' || group.key === 'atRisk') && item.note" class="ps-2 pb-1 text-xs text-muted">
               {{ item.note }}
             </p>
           </li>

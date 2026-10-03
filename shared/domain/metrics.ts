@@ -1,6 +1,6 @@
 import type { Milestone, Release, ReleaseItem } from './model'
-import type { ItemStatus, ReleaseHealth } from './vocabulary'
-import { ITEM_STATUSES } from './vocabulary'
+import type { ItemKind, ItemStatus, ReleaseHealth } from './vocabulary'
+import { ITEM_KINDS, ITEM_STATUSES } from './vocabulary'
 
 const DAY_MS = 86_400_000
 
@@ -12,6 +12,13 @@ export function scopedItems(release: Release): ReleaseItem[] {
 export function countByStatus(items: ReleaseItem[]): Record<ItemStatus, number> {
   const counts = Object.fromEntries(ITEM_STATUSES.map(s => [s, 0])) as Record<ItemStatus, number>
   for (const item of items) counts[item.status] += 1
+  return counts
+}
+
+/** Itens por classificação; `none` conta os ainda sem classificação. */
+export function countByKind(items: ReleaseItem[]): Record<ItemKind | 'none', number> {
+  const counts = Object.fromEntries([...ITEM_KINDS, 'none'].map(k => [k, 0])) as Record<ItemKind | 'none', number>
+  for (const item of items) counts[item.kind ?? 'none'] += 1
   return counts
 }
 
@@ -42,29 +49,31 @@ export function daysUntil(day: string, now: Date): number {
   return Math.round((parseDay(day).getTime() - today.getTime()) / DAY_MS)
 }
 
-/**
- * Saúde da release. O valor informado pelo time de Produto sempre vence;
- * sem ele, o painel deduz a partir do prazo e dos bloqueios.
- */
 /** Release oficialmente adiada (informado pelo time ou pelo Enspace). */
 export function isPostponed(release: Release): boolean {
   return release.postponement?.postponed === true
 }
 
+/**
+ * Saúde da release. O valor informado pelo time de Produto sempre vence;
+ * sem ele, o painel deduz a partir do prazo, dos bloqueios e dos itens em risco.
+ */
 export function releaseHealth(release: Release, now: Date): ReleaseHealth {
   if (release.health) return release.health
   if (release.stage === 'released') return 'on_track'
   // Adiada e sem nova data: não há prazo a cumprir ainda.
   if (isPostponed(release) && !release.targetDate) return 'delayed'
 
-  const blocked = release.items.some(i => i.status === 'blocked')
-  if (!release.targetDate) return blocked ? 'at_risk' : 'on_track'
+  const items = scopedItems(release)
+  const warning = items.some(i => i.status === 'blocked' || i.atRisk)
+  if (!release.targetDate) return warning ? 'at_risk' : 'on_track'
 
   const days = daysUntil(release.targetDate, now)
   if (days < 0) return 'delayed'
 
-  const { percent } = releaseProgress(release)
-  if (blocked || (days <= 7 && percent < 60)) return 'at_risk'
+  // Sem itens publicados ainda, não há progresso para avaliar.
+  const { percent, total } = releaseProgress(release)
+  if (warning || (days <= 7 && total > 0 && percent < 60)) return 'at_risk'
   return 'on_track'
 }
 
@@ -98,7 +107,7 @@ export function recentUpdates(releases: Release[], limit: number): ItemUpdate[] 
 
 /** Assinatura usada para destacar itens que mudaram desde a última busca. */
 export function itemSignature(item: ReleaseItem): string {
-  return `${item.status}|${item.updatedAt}|${item.title}|${item.note ?? ''}`
+  return `${item.status}|${item.updatedAt}|${item.title}|${item.note ?? ''}|${item.atRisk ? 'risco' : ''}`
 }
 
 export function changedItemIds(previous: Release[], next: Release[]): Set<string> {

@@ -57,7 +57,7 @@
           "title": "Exemplo: nova tela de relatórios",
           "summary": "Item fictício de demonstração.",
           "customerImpact": "Texto de exemplo sobre o que muda para o cliente.",
-          "kind": "feature",
+          "kind": "innovation",
           "module": "Área A",
           "status": "in_progress",
           "priority": "high",
@@ -66,13 +66,15 @@
           "owner": "Squad A",
           "needsCommunication": true,
           "needsTraining": true,
-          "updatedAt": "2026-10-02T16:12:00-03:00"
+          "updatedAt": "2026-10-02T16:12:00-03:00",
+          "origin": "client",
+          "clientCount": 3
         },
         {
           "id": "DEMO-102",
           "title": "Exemplo: assistente de resumo automático",
           "summary": "Item fictício de demonstração.",
-          "kind": "feature",
+          "kind": "innovation",
           "module": "Área B",
           "status": "testing",
           "priority": "high",
@@ -86,14 +88,18 @@
         {
           "id": "DEMO-103",
           "title": "Exemplo: campos condicionais",
-          "kind": "feature",
+          "kind": "innovation",
           "module": "Área C",
           "status": "ready",
           "priority": "medium",
           "impact": "medium",
           "audience": "Todos os clientes",
           "owner": "Squad C",
-          "updatedAt": "2026-10-01T17:45:00-03:00"
+          "updatedAt": "2026-10-01T17:45:00-03:00",
+          "origin": "client",
+          "tickets": [
+            "REQ-EXEMPLO-0001"
+          ]
         },
         {
           "id": "DEMO-104",
@@ -109,12 +115,14 @@
         {
           "id": "DEMO-105",
           "title": "Exemplo: carregamento mais rápido",
-          "kind": "performance",
+          "kind": "improvement",
           "module": "Plataforma",
           "status": "testing",
           "priority": "high",
           "impact": "medium",
-          "updatedAt": "2026-10-02T09:20:00-03:00"
+          "updatedAt": "2026-10-02T09:20:00-03:00",
+          "atRisk": true,
+          "note": "Exemplo de risco: o ganho de desempenho ainda não foi confirmado em homologação."
         },
         {
           "id": "DEMO-106",
@@ -126,12 +134,17 @@
           "impact": "low",
           "requestedBy": "Suporte",
           "note": "Antecipado em hotfix.",
-          "updatedAt": "2026-09-24T19:00:00-03:00"
+          "updatedAt": "2026-09-24T19:00:00-03:00",
+          "origin": "client",
+          "tickets": [
+            "REQ-EXEMPLO-0002",
+            "REQ-EXEMPLO-0003"
+          ]
         },
         {
           "id": "DEMO-107",
           "title": "Exemplo: nova tentativa automática em integrações",
-          "kind": "integration",
+          "kind": "improvement",
           "module": "Integrações",
           "status": "in_progress",
           "priority": "medium",
@@ -141,7 +154,7 @@
         {
           "id": "DEMO-108",
           "title": "Exemplo: integração com parceiro externo",
-          "kind": "integration",
+          "kind": "innovation",
           "module": "Integrações",
           "status": "blocked",
           "priority": "high",
@@ -154,12 +167,13 @@
         {
           "id": "DEMO-109",
           "title": "Exemplo: logs de auditoria",
-          "kind": "security",
+          "kind": "innovation",
           "module": "Administração",
           "status": "planned",
           "priority": "medium",
           "impact": "low",
-          "updatedAt": "2026-09-29T11:00:00-03:00"
+          "updatedAt": "2026-09-29T11:00:00-03:00",
+          "origin": "internal"
         },
         {
           "id": "DEMO-110",
@@ -206,7 +220,7 @@
         {
           "id": "DEMO-201",
           "title": "Exemplo: login único",
-          "kind": "security",
+          "kind": "innovation",
           "module": "Administração",
           "status": "planned",
           "priority": "high",
@@ -217,7 +231,7 @@
         {
           "id": "DEMO-202",
           "title": "Exemplo: permissões por campo",
-          "kind": "security",
+          "kind": "improvement",
           "module": "Administração",
           "status": "in_progress",
           "priority": "high",

@@ -19,12 +19,16 @@ export function releaseDate(release: Release): string | undefined {
   return release.releasedAt ?? release.targetDate
 }
 
-/** Releases antigas podem ter só versão e data; aí não há página de detalhes a mostrar. */
+/**
+ * Releases antigas podem ter só versão e data; aí não há página de detalhes a mostrar.
+ * As que ainda não saíram sempre têm página, mesmo antes de os itens serem publicados.
+ */
 export function hasDetails(release: Release): boolean {
-  return release.items.length > 0 || Boolean(release.summary) || release.milestones.length > 0
+  return release.stage !== 'released' || release.items.length > 0 || Boolean(release.summary) || release.milestones.length > 0
 }
 
-export type CalendarStatus = 'released' | 'postponed' | 'planned'
+/** `moved` marca a data original de uma release adiada. */
+export type CalendarStatus = 'released' | 'postponed' | 'planned' | 'moved'
 
 export interface CalendarEntry {
   date: string
@@ -45,6 +49,18 @@ export function calendarEntries(releases: Release[]): CalendarEntry[] {
     .flatMap((release) => {
       const date = releaseDate(release)
       return date ? [{ date, release, type: releaseType(release), status: calendarStatus(release) }] : []
+    })
+    .sort((a, b) => a.date.localeCompare(b.date))
+}
+
+/** Datas originais das releases adiadas, para o calendário mostrar de onde cada uma saiu. */
+export function originalDateEntries(releases: Release[]): CalendarEntry[] {
+  return releases
+    .flatMap((release) => {
+      const date = isPostponed(release) ? release.postponement?.originalDate : undefined
+      return date && date !== releaseDate(release)
+        ? [{ date, release, type: releaseType(release), status: 'moved' as const }]
+        : []
     })
     .sort((a, b) => a.date.localeCompare(b.date))
 }

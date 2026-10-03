@@ -31,7 +31,7 @@ const columns: TableColumn<ReleaseItem>[] = [{
   cell: ({ row }) => h(ItemStatusBadge, { status: row.original.status })
 }, {
   accessorKey: 'kind',
-  header: 'Tipo',
+  header: 'Classificação',
   cell: ({ row }) => h(ItemKindBadge, { kind: row.original.kind })
 }, {
   accessorKey: 'module',

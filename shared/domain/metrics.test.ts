@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { changedItemIds, daysUntil, defaultRelease, releaseHealth, releaseProgress } from './metrics'
+import { changedItemIds, countByKind, daysUntil, defaultRelease, releaseHealth, releaseProgress } from './metrics'
 import { ReleaseSchema, compareVersions, type Release } from './model'
 
 const item = (id: string, status: string, updatedAt = '2026-10-01T10:00:00Z') => ({
   id,
   title: `Item ${id}`,
-  kind: 'feature',
+  kind: 'innovation',
   status,
   updatedAt
 })
@@ -58,6 +58,25 @@ describe('releaseHealth', () => {
   it('fica no prazo sem riscos', () => {
     const r = release({ targetDate: '2026-12-01', items: [item('a', 'in_progress')] })
     expect(releaseHealth(r, now)).toBe('on_track')
+  })
+
+  it('marca atenção com item em risco', () => {
+    const r = release({ targetDate: '2026-12-01', items: [{ ...item('a', 'in_progress'), atRisk: true }] })
+    expect(releaseHealth(r, now)).toBe('at_risk')
+  })
+
+  it('não acusa progresso baixo antes de os itens serem publicados', () => {
+    const r = release({ targetDate: '2026-10-06', postponement: { postponed: true, originalDate: '2026-09-29' } })
+    expect(releaseHealth(r, now)).toBe('on_track')
+  })
+})
+
+describe('countByKind', () => {
+  it('conta por classificação e separa os sem classificação', () => {
+    const r = release({
+      items: [item('a', 'planned'), { ...item('b', 'planned'), kind: 'Correção' }, { ...item('c', 'planned'), kind: undefined }]
+    })
+    expect(countByKind(r.items)).toEqual({ fix: 1, improvement: 0, innovation: 1, none: 1 })
   })
 })
 

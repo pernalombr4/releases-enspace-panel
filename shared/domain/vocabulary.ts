@@ -13,15 +13,13 @@ export const ITEM_STATUSES = [
 ] as const
 export type ItemStatus = (typeof ITEM_STATUSES)[number]
 
-export const ITEM_KINDS = [
-  'feature',
-  'improvement',
-  'fix',
-  'integration',
-  'security',
-  'performance'
-] as const
+/** Classificação do item: correção, melhoria ou inovação. */
+export const ITEM_KINDS = ['fix', 'improvement', 'innovation'] as const
 export type ItemKind = (typeof ITEM_KINDS)[number]
+
+/** De onde veio o pedido. Nunca o nome do cliente. */
+export const ITEM_ORIGINS = ['client', 'internal'] as const
+export type ItemOrigin = (typeof ITEM_ORIGINS)[number]
 
 export const LEVELS = ['high', 'medium', 'low'] as const
 export type Level = (typeof LEVELS)[number]
@@ -53,12 +51,15 @@ const ALIASES = {
     postponed: ['adiado', 'movido', 'fora da release', 'descopado', 'despriorizado']
   },
   kind: {
-    feature: ['nova funcionalidade', 'funcionalidade', 'novidade', 'nova feature'],
-    improvement: ['melhoria', 'evolucao', 'ajuste'],
-    fix: ['correcao', 'bug', 'bugfix', 'hotfix'],
-    integration: ['integracao', 'integracoes'],
-    security: ['seguranca', 'compliance', 'lgpd'],
-    performance: ['desempenho', 'otimizacao']
+    // Inclui os tipos de Demanda do Enspace (bug, melhoria, nova_funcionalidade,
+    // solicitacao_automacao, divida_tecnica) e os nomes antigos do painel.
+    fix: ['correcao', 'bug', 'bugfix', 'hotfix', 'erro', 'defeito'],
+    improvement: ['melhoria', 'evolucao', 'ajuste', 'divida tecnica', 'refatoracao', 'performance', 'desempenho', 'otimizacao'],
+    innovation: ['inovacao', 'novidade', 'nova funcionalidade', 'funcionalidade', 'nova feature', 'feature', 'integracao', 'integration', 'automacao', 'solicitacao automacao']
+  },
+  origin: {
+    client: ['cliente', 'pedido de cliente', 'externo', 'externa'],
+    internal: ['interno', 'interna', 'time interno', 'produto']
   },
   level: {
     high: ['alta', 'alto', 'critica', 'critico'],

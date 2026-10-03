@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import {
   ITEM_KINDS,
+  ITEM_ORIGINS,
   ITEM_STATUSES,
   LEVELS,
   RELEASE_HEALTH,
@@ -51,7 +52,8 @@ export const ReleaseItemSchema = z.object({
   summary: optionalText,
   /** O que muda para o cliente / para as áreas. */
   customerImpact: optionalText,
-  kind: enumOf('kind', ITEM_KINDS),
+  /** Correção, melhoria ou inovação. Vazio = "sem classificação". */
+  kind: enumOf('kind', ITEM_KINDS).optional(),
   /** Área do produto (Dashboards, Formulários, Integrações...). */
   module: optionalText,
   status: enumOf('status', ITEM_STATUSES),
@@ -59,6 +61,14 @@ export const ReleaseItemSchema = z.object({
   impact: enumOf('level', LEVELS).optional(),
   /** Cliente ou área que pediu. */
   requestedBy: optionalText,
+  /** Pedido de cliente ou interno. Só a origem: o nome do cliente não vai para o painel. */
+  origin: enumOf('origin', ITEM_ORIGINS).optional(),
+  /** Quantos clientes pediram, sem nomes. */
+  clientCount: z.number().int().min(0).optional(),
+  /** Pode não entrar nesta release; o motivo vai em `note`. */
+  atRisk: z.boolean().optional(),
+  /** Códigos de solicitações ou chamados vinculados (ex.: REQ…), para o Suporte localizar o item. */
+  tickets: z.array(z.string().trim().min(1)).optional(),
   /** Squad / pessoa responsável. */
   owner: optionalText,
   /** Quem recebe: "Todos os clientes", "Plano Enterprise", "Beta fechado"... */

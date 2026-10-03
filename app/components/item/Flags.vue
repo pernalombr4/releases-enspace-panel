@@ -1,21 +1,27 @@
 <script setup lang="ts">
+import { itemMarkers } from '#shared/domain/markers'
 import type { ReleaseItem } from '#shared/domain/model'
 
 const props = defineProps<{ item: ReleaseItem }>()
 
-const flags = computed(() => [
-  props.item.beta && { label: 'Beta', icon: 'i-lucide-flask-conical', hint: 'Liberação em beta' },
-  props.item.needsCommunication && { label: 'Comunicação', icon: 'i-lucide-megaphone', hint: 'Pede comunicação a clientes' },
-  props.item.needsTraining && { label: 'Treinamento', icon: 'i-lucide-graduation-cap', hint: 'Pede treinamento interno' }
-].filter((flag): flag is { label: string, icon: string, hint: string } => Boolean(flag)))
+const markers = computed(() => itemMarkers(props.item))
 </script>
 
 <template>
-  <div v-if="flags.length" class="flex flex-wrap gap-1">
-    <UTooltip v-for="flag in flags" :key="flag.label" :text="flag.hint">
+  <div v-if="markers.length || item.audience" class="flex flex-wrap gap-1">
+    <UTooltip v-for="marker in markers" :key="marker.key" :text="marker.description">
       <UBadge
-        :label="flag.label"
-        :icon="flag.icon"
+        :label="marker.label"
+        :icon="marker.icon"
+        :color="marker.color"
+        variant="soft"
+        size="sm"
+      />
+    </UTooltip>
+    <UTooltip v-if="item.audience" text="Quem recebe a mudança">
+      <UBadge
+        :label="item.audience"
+        icon="i-lucide-users"
         color="neutral"
         variant="soft"
         size="sm"

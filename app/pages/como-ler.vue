@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { BOARD_ORDER, ITEM_STATUS, POSTPONEMENT_META, RELEASE_HEALTH_META, RELEASE_STAGE, RELEASE_TYPE_META } from '#shared/domain/labels'
+import { BOARD_ORDER, ITEM_KIND, ITEM_STATUS, KIND_ORDER, POSTPONEMENT_META, RELEASE_HEALTH_META, RELEASE_STAGE, RELEASE_TYPE_META } from '#shared/domain/labels'
+import { MARKER_KEYS, MARKER_META } from '#shared/domain/markers'
 import { RELEASE_HEALTH, RELEASE_STAGES, RELEASE_TYPES } from '#shared/domain/vocabulary'
 
 useSeoMeta({ title: 'Como ler o painel · ENSPACE Releases' })
@@ -29,6 +30,56 @@ const statuses = [...BOARD_ORDER.filter(s => s !== 'blocked'), 'blocked' as cons
               <dt><ItemStatusBadge :status="s" /></dt>
               <dd class="text-sm text-muted">
                 {{ ITEM_STATUS[s].description }}
+              </dd>
+            </div>
+          </dl>
+        </UPageCard>
+
+        <UPageCard
+          title="Classificação dos itens"
+          description="Todo item é uma correção, uma melhoria ou uma inovação."
+          variant="subtle"
+        >
+          <dl class="flex flex-col gap-3">
+            <div v-for="k in KIND_ORDER" :key="k" class="grid gap-1 sm:grid-cols-[13rem_1fr] sm:gap-4">
+              <dt><ItemKindBadge :kind="k" size="md" /></dt>
+              <dd class="text-sm text-muted">
+                {{ ITEM_KIND[k].description }}
+              </dd>
+            </div>
+          </dl>
+        </UPageCard>
+
+        <UPageCard
+          title="Marcadores"
+          description="Selos que aparecem nos itens quando se aplicam. Na página de itens, dá para filtrar por eles."
+          variant="subtle"
+        >
+          <dl class="flex flex-col gap-3">
+            <div v-for="m in MARKER_KEYS" :key="m" class="grid gap-1 sm:grid-cols-[13rem_1fr] sm:gap-4">
+              <dt>
+                <UBadge
+                  :label="MARKER_META[m].label"
+                  :icon="MARKER_META[m].icon"
+                  :color="MARKER_META[m].color"
+                  variant="soft"
+                />
+              </dt>
+              <dd class="text-sm text-muted">
+                {{ MARKER_META[m].description }}
+              </dd>
+            </div>
+            <div class="grid gap-1 sm:grid-cols-[13rem_1fr] sm:gap-4">
+              <dt>
+                <UBadge
+                  label="Todos os clientes"
+                  icon="i-lucide-users"
+                  color="neutral"
+                  variant="soft"
+                />
+              </dt>
+              <dd class="text-sm text-muted">
+                Quem recebe a mudança: todos os clientes, alguns clientes, um cliente específico ou só uso interno.
               </dd>
             </div>
           </dl>
@@ -69,7 +120,7 @@ const statuses = [...BOARD_ORDER.filter(s => s !== 'blocked'), 'blocked' as cons
 
         <UPageCard
           title="Adiamento"
-          description="Indica publicamente se a data de subida da release foi adiada ou mantida. Quando adiada, o resumo da release mostra a data original, a nova data e o motivo."
+          description="Indica publicamente se a data de subida da release foi adiada ou mantida. Quando adiada, o resumo da release mostra a data original, a nova data e o motivo, e o calendário mostra a data original riscada."
           variant="subtle"
         >
           <dl class="flex flex-col gap-3">
@@ -91,7 +142,7 @@ const statuses = [...BOARD_ORDER.filter(s => s !== 'blocked'), 'blocked' as cons
 
         <UPageCard
           title="Saúde da release"
-          description="Informada pelo time de Produto; quando não informada, o painel calcula pelo prazo e pelos bloqueios."
+          description="Informada pelo time de Produto; quando não informada, o painel calcula pelo prazo, pelos bloqueios e pelos itens em risco."
           variant="subtle"
         >
           <dl class="flex flex-col gap-3">

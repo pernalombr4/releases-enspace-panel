@@ -138,7 +138,8 @@ export function mapItem(record: EnspaceRecord): { version?: string, input: unkno
       title: text(get(f.title)),
       summary: text(get(f.summary)),
       customerImpact: text(get(f.customerImpact)),
-      kind: text(get(f.kind)) ?? 'feature',
+      // Vazio = "sem classificação".
+      kind: text(get(f.kind)),
       module: text(get(f.module)),
       // O status pode ser um campo próprio ou o status do fluxo do registro.
       status: text(get(f.status)) ?? text(record.status),

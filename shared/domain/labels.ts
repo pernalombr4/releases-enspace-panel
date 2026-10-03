@@ -1,4 +1,4 @@
-import type { ItemKind, ItemStatus, Level, ReleaseHealth, ReleaseStage, ReleaseType } from './vocabulary'
+import type { ItemKind, ItemOrigin, ItemStatus, Level, ReleaseHealth, ReleaseStage, ReleaseType } from './vocabulary'
 
 /** Cores semânticas do Nuxt UI (definidas em app.config.ts). */
 export type UiColor = 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
@@ -61,13 +61,36 @@ export const ITEM_STATUS: Record<ItemStatus, Meta> = {
   }
 }
 
-export const ITEM_KIND: Record<ItemKind, { label: string, icon: string }> = {
-  feature: { label: 'Nova funcionalidade', icon: 'i-lucide-sparkles' },
-  improvement: { label: 'Melhoria', icon: 'i-lucide-trending-up' },
-  fix: { label: 'Correção', icon: 'i-lucide-wrench' },
-  integration: { label: 'Integração', icon: 'i-lucide-plug' },
-  security: { label: 'Segurança', icon: 'i-lucide-shield-check' },
-  performance: { label: 'Performance', icon: 'i-lucide-gauge' }
+/** Ordem de exibição da classificação: do que é novo ao que conserta. */
+export const KIND_ORDER: ItemKind[] = ['innovation', 'improvement', 'fix']
+
+export const ITEM_KIND: Record<ItemKind, Meta & { plural: string }> = {
+  innovation: {
+    label: 'Inovação',
+    plural: 'Inovações',
+    description: 'Algo novo no produto: funcionalidade, integração ou módulo que não existia.',
+    color: 'primary',
+    icon: 'i-lucide-sparkles'
+  },
+  improvement: {
+    label: 'Melhoria',
+    plural: 'Melhorias',
+    description: 'Deixa melhor algo que já existe: mais simples, mais rápido ou mais completo.',
+    color: 'secondary',
+    icon: 'i-lucide-trending-up'
+  },
+  fix: {
+    label: 'Correção',
+    plural: 'Correções',
+    description: 'Conserta algo que não funcionava como deveria.',
+    color: 'neutral',
+    icon: 'i-lucide-wrench'
+  }
+}
+
+export const ITEM_ORIGIN_LABEL: Record<ItemOrigin, string> = {
+  client: 'Pedido de cliente',
+  internal: 'Interna'
 }
 
 export const IMPACT_LABEL: Record<Level, string> = {
@@ -119,7 +142,7 @@ export const RELEASE_HEALTH_META: Record<ReleaseHealth, Meta> = {
   },
   at_risk: {
     label: 'Em atenção',
-    description: 'Há bloqueios ou pouco tempo para o que falta; a data pode mudar.',
+    description: 'Há bloqueios, itens em risco ou pouco tempo para o que falta; a data pode mudar.',
     color: 'warning',
     icon: 'i-lucide-triangle-alert'
   },
@@ -181,8 +204,9 @@ export const RELEASE_TYPE_META: Record<ReleaseType, {
 }
 
 /** Situação de uma release no calendário. */
-export const CALENDAR_STATUS_META: Record<'released' | 'postponed' | 'planned', Omit<Meta, 'description'>> = {
+export const CALENDAR_STATUS_META: Record<'released' | 'postponed' | 'planned' | 'moved', Omit<Meta, 'description'>> = {
   released: { label: 'Liberada', color: 'success', icon: 'i-lucide-rocket' },
   postponed: { label: 'Adiada', color: 'warning', icon: 'i-lucide-calendar-x' },
-  planned: { label: 'Prevista', color: 'neutral', icon: 'i-lucide-calendar-clock' }
+  planned: { label: 'Prevista', color: 'neutral', icon: 'i-lucide-calendar-clock' },
+  moved: { label: 'Data original', color: 'neutral', icon: 'i-lucide-calendar-minus' }
 }

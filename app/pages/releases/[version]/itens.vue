@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { plural } from '#shared/domain/format'
-import { BOARD_ORDER, ITEM_KIND, ITEM_STATUS } from '#shared/domain/labels'
+import { BOARD_ORDER, ITEM_KIND, ITEM_STATUS, KIND_ORDER } from '#shared/domain/labels'
+import { MARKER_KEYS, MARKER_META, hasMarker, type MarkerKey } from '#shared/domain/markers'
 import type { Release, ReleaseItem } from '#shared/domain/model'
-import { ITEM_KINDS, ITEM_STATUSES, simplify } from '#shared/domain/vocabulary'
+import { ITEM_STATUSES, simplify } from '#shared/domain/vocabulary'
 
 const props = defineProps<{ release: Release }>()
 
@@ -11,6 +12,7 @@ const router = useRouter()
 const { changed } = useReleases()
 
 const ALL = 'todos'
+const UNCLASSIFIED = 'sem-classificacao'
 
 /** Filtros espelhados na URL, para a visão poder ser compartilhada por link. */
 function queryRef(name: string, fallback: string) {
@@ -26,11 +28,17 @@ const search = queryRef('busca', '')
 const kind = queryRef('tipo', ALL)
 const area = queryRef('area', ALL)
 const status = queryRef('status', ALL)
+const marker = queryRef('marcador', ALL)
 const view = queryRef('visao', 'quadro')
 
 const kindItems = computed(() => [
-  { label: 'Todos os tipos', value: ALL },
-  ...ITEM_KINDS.filter(k => props.release.items.some(i => i.kind === k)).map(k => ({ label: ITEM_KIND[k].label, value: k }))
+  { label: 'Todas as classificações', value: ALL },
+  ...KIND_ORDER.filter(k => props.release.items.some(i => i.kind === k)).map(k => ({ label: ITEM_KIND[k].plural, value: k, icon: ITEM_KIND[k].icon })),
+  ...props.release.items.some(i => !i.kind) ? [{ label: 'Sem classificação', value: UNCLASSIFIED, icon: 'i-lucide-circle-help' }] : []
+])
+const markerItems = computed(() => [
+  { label: 'Todos os marcadores', value: ALL },
+  ...MARKER_KEYS.filter(k => props.release.items.some(i => hasMarker(i, k))).map(k => ({ label: MARKER_META[k].label, value: k, icon: MARKER_META[k].icon }))
 ])
 const areaItems = computed(() => [
   { label: 'Todas as áreas', value: ALL },
@@ -46,11 +54,12 @@ const viewItems = [
 ]
 
 function matches(item: ReleaseItem) {
-  if (kind.value !== ALL && item.kind !== kind.value) return false
+  if (kind.value !== ALL && (item.kind ?? UNCLASSIFIED) !== kind.value) return false
   if (area.value !== ALL && item.module !== area.value) return false
   if (status.value !== ALL && item.status !== status.value) return false
+  if (marker.value !== ALL && !hasMarker(item, marker.value as MarkerKey)) return false
   if (search.value) {
-    const haystack = simplify([item.id, item.title, item.summary, item.module, item.customerImpact, item.owner, item.requestedBy].filter(Boolean).join(' '))
+    const haystack = simplify([item.id, item.title, item.summary, item.module, item.customerImpact, item.owner, item.requestedBy, item.note, item.audience, ...item.tickets ?? []].filter(Boolean).join(' '))
     return simplify(search.value).split(' ').every(term => haystack.includes(term))
   }
   return true
@@ -61,7 +70,7 @@ const byRecent = (a: ReleaseItem, b: ReleaseItem) => Date.parse(b.updatedAt) - D
 const filtered = computed(() => props.release.items.filter(matches))
 const scoped = computed(() => filtered.value.filter(i => i.status !== 'postponed'))
 const postponed = computed(() => filtered.value.filter(i => i.status === 'postponed'))
-const hasFilters = computed(() => Boolean(search.value) || [kind, area, status].some(f => f.value !== ALL))
+const hasFilters = computed(() => Boolean(search.value) || [kind, area, status, marker].some(f => f.value !== ALL))
 
 // A coluna de bloqueados só aparece quando há algum.
 const columns = computed(() => BOARD_ORDER
@@ -72,7 +81,7 @@ const listItems = computed(() => [...scoped.value]
   .sort((a, b) => BOARD_ORDER.indexOf(a.status) - BOARD_ORDER.indexOf(b.status) || byRecent(a, b)))
 
 function clearFilters() {
-  router.replace({ query: { ...route.query, busca: undefined, tipo: undefined, area: undefined, status: undefined } })
+  router.replace({ query: { ...route.query, busca: undefined, tipo: undefined, area: undefined, status: undefined, marcador: undefined } })
 }
 
 const isChanged = (id: string) => changed.value.has(`${props.release.version}:${id}`)
@@ -84,12 +93,18 @@ const isChanged = (id: string) => changed.value.has(`${props.release.version}:${
       <UInput
         v-model="search"
         icon="i-lucide-search"
-        placeholder="Buscar por título, código, área…"
+        placeholder="Buscar por título, código, solicitação…"
         class="w-full sm:max-w-xs"
       />
-      <USelect v-model="kind" :items="kindItems" class="min-w-40" />
-      <USelect v-model="area" :items="areaItems" class="min-w-40" />
+      <USelect v-model="kind" :items="kindItems" class="min-w-44" />
       <USelect v-model="status" :items="statusItems" class="min-w-44" />
+      <USelect v-model="marker" :items="markerItems" class="min-w-44" />
+      <USelect
+        v-if="areaItems.length > 1"
+        v-model="area"
+        :items="areaItems"
+        class="min-w-40"
+      />
       <UButton
         v-if="hasFilters"
         label="Limpar filtros"

@@ -2,7 +2,7 @@
 import type { TableColumn } from '@nuxt/ui'
 import { CalendarDate, getLocalTimeZone, today, type DateValue } from '@internationalized/date'
 import { breakpointsTailwind } from '@vueuse/core'
-import { calendarEntries, hasDetails, undatedReleases, type CalendarEntry } from '#shared/domain/calendar'
+import { calendarEntries, hasDetails, originalDateEntries, undatedReleases, type CalendarEntry } from '#shared/domain/calendar'
 import { formatDay, formatDayYear, formatWeekday } from '#shared/domain/format'
 import { CALENDAR_STATUS_META, RELEASE_TYPE_META } from '#shared/domain/labels'
 import { RELEASE_TYPES, type ReleaseType } from '#shared/domain/vocabulary'
@@ -21,11 +21,18 @@ function toggleType(type: ReleaseType) {
 
 const entries = computed(() => calendarEntries(releases.value).filter(e => activeTypes.value.includes(e.type)))
 
-const byDate = computed(() => {
+// Datas originais de releases adiadas: aparecem riscadas no calendário.
+const moved = computed(() => originalDateEntries(releases.value).filter(e => activeTypes.value.includes(e.type)))
+
+function groupByDate(list: CalendarEntry[]) {
   const map = new Map<string, CalendarEntry[]>()
-  for (const entry of entries.value) map.set(entry.date, [...(map.get(entry.date) ?? []), entry])
+  for (const entry of list) map.set(entry.date, [...(map.get(entry.date) ?? []), entry])
   return map
-})
+}
+
+const byDate = computed(() => groupByDate(entries.value))
+const movedByDate = computed(() => groupByDate(moved.value))
+const isMovedDay = (day: DateValue) => movedByDate.value.has(day.toString())
 
 /** Tipo de maior destaque no dia (major > minor > patch). */
 function dayType(day: DateValue): ReleaseType | undefined {
@@ -61,8 +68,14 @@ const periodLabel = computed(() => {
     : `${first} de ${startDate.year} e ${last} de ${endDate.year}`
 })
 
-const selectedEntries = computed(() => selected.value ? byDate.value.get(selected.value.toString()) ?? [] : [])
-const periodEntries = computed(() => entries.value.filter(e => e.date >= range.value.start && e.date <= range.value.end))
+const byDay = (a: CalendarEntry, b: CalendarEntry) => a.date.localeCompare(b.date)
+const selectedEntries = computed(() => {
+  const day = selected.value?.toString()
+  return day ? [...byDate.value.get(day) ?? [], ...movedByDate.value.get(day) ?? []] : []
+})
+const periodEntries = computed(() => [...entries.value, ...moved.value]
+  .filter(e => e.date >= range.value.start && e.date <= range.value.end)
+  .sort(byDay))
 const showingDay = computed(() => selectedEntries.value.length > 0)
 const listEntries = computed(() => showingDay.value ? selectedEntries.value : periodEntries.value)
 
@@ -173,6 +186,14 @@ const columns: TableColumn<CalendarEntry>[] = [{
                 size="lg"
                 class="justify-center rounded-full font-semibold"
               />
+              <UBadge
+                v-else-if="isMovedDay(day)"
+                :label="String(day.day)"
+                color="warning"
+                variant="outline"
+                size="lg"
+                class="justify-center rounded-full line-through"
+              />
               <template v-else>
                 {{ day.day }}
               </template>
@@ -182,6 +203,14 @@ const columns: TableColumn<CalendarEntry>[] = [{
           <template #footer>
             <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
               <ReleaseTypeBadge v-for="type in RELEASE_TYPES" :key="type" :type="type" />
+              <UTooltip text="Dia em que uma release adiada estava prevista">
+                <UBadge
+                  label="Data original"
+                  color="warning"
+                  variant="outline"
+                  class="line-through"
+                />
+              </UTooltip>
               <span>Clique num dia marcado para ver a release.</span>
             </div>
           </template>
@@ -205,7 +234,12 @@ const columns: TableColumn<CalendarEntry>[] = [{
           </template>
 
           <ul v-if="listEntries.length" class="divide-y divide-default">
-            <li v-for="entry in listEntries" :key="entry.release.version" class="flex items-start gap-4 p-4">
+            <li
+              v-for="entry in listEntries"
+              :key="`${entry.status}:${entry.release.version}`"
+              class="flex items-start gap-4 p-4"
+              :class="{ 'opacity-75': entry.status === 'moved' }"
+            >
               <div class="w-12 shrink-0 text-center">
                 <p class="text-xs uppercase text-muted">
                   {{ formatWeekday(entry.date) }}
@@ -234,6 +268,9 @@ const columns: TableColumn<CalendarEntry>[] = [{
                 </p>
                 <p v-if="entry.status === 'postponed' && entry.release.postponement?.originalDate" class="text-xs text-muted">
                   Antes prevista para {{ formatDayYear(entry.release.postponement.originalDate) }}
+                </p>
+                <p v-if="entry.status === 'moved'" class="text-xs text-muted">
+                  {{ entry.release.targetDate ? `Adiada para ${formatDayYear(entry.release.targetDate)}` : 'Adiada; nova data a definir' }}
                 </p>
               </div>
 

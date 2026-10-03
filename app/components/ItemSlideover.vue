@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { formatDateTime, formatRelative } from '#shared/domain/format'
-import { IMPACT_LABEL, ITEM_STATUS, PRIORITY_LABEL } from '#shared/domain/labels'
+import { IMPACT_LABEL, ITEM_ORIGIN_LABEL, ITEM_STATUS, PRIORITY_LABEL } from '#shared/domain/labels'
 
 const route = useRoute()
 const router = useRouter()
@@ -32,6 +32,7 @@ const facts = computed(() => {
     ['Impacto para clientes', i.impact && IMPACT_LABEL[i.impact]],
     ['Prioridade', i.priority && PRIORITY_LABEL[i.priority]],
     ['Quem recebe', i.audience],
+    ['Origem', i.origin && ITEM_ORIGIN_LABEL[i.origin]],
     ['Solicitado por', i.requestedBy],
     ['Responsável', i.owner]
   ].filter((fact): fact is [string, string] => Boolean(fact[1]))
@@ -58,11 +59,19 @@ const facts = computed(() => {
 
         <UAlert
           v-if="item.note"
-          :color="item.status === 'blocked' ? 'error' : 'neutral'"
+          :color="item.status === 'blocked' ? 'error' : item.atRisk ? 'warning' : 'neutral'"
           variant="subtle"
-          :icon="item.status === 'blocked' ? 'i-lucide-octagon-alert' : 'i-lucide-info'"
-          :title="item.status === 'blocked' ? 'Motivo do bloqueio' : 'Observação'"
+          :icon="item.status === 'blocked' ? 'i-lucide-octagon-alert' : item.atRisk ? 'i-lucide-triangle-alert' : 'i-lucide-info'"
+          :title="item.status === 'blocked' ? 'Motivo do bloqueio' : item.atRisk ? 'Por que está em risco' : 'Observação'"
           :description="item.note"
+        />
+        <UAlert
+          v-else-if="item.atRisk"
+          color="warning"
+          variant="subtle"
+          icon="i-lucide-triangle-alert"
+          title="Em risco"
+          description="Este item pode não entrar nesta release."
         />
         <UAlert
           v-if="item.movedTo"
@@ -91,6 +100,18 @@ const facts = computed(() => {
         </section>
 
         <ItemFlags :item="item" />
+
+        <section v-if="item.tickets?.length">
+          <h3 class="mb-1 text-xs font-semibold uppercase text-muted">
+            Solicitações vinculadas
+          </h3>
+          <ul class="flex flex-col gap-1">
+            <li v-for="ticket in item.tickets" :key="ticket" class="flex items-center gap-2">
+              <UIcon name="i-lucide-ticket" class="size-4 shrink-0 text-muted" />
+              <span class="font-mono text-xs text-highlighted break-all">{{ ticket }}</span>
+            </li>
+          </ul>
+        </section>
 
         <USeparator />
 

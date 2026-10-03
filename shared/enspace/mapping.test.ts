@@ -60,7 +60,7 @@ describe('buildReleases', () => {
     expect(r?.milestones.map(m => m.label)).toEqual(['Code freeze', 'Subida para produção'])
     expect(r?.items.map(i => [i.id, i.status, i.kind])).toEqual([
       ['ENS-1', 'planned', 'improvement'],
-      ['ENS-2', 'blocked', 'feature']
+      ['ENS-2', 'blocked', undefined]
     ])
     expect(r?.items[1]?.needsCommunication).toBe(true)
   })
