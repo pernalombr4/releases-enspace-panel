@@ -15,9 +15,14 @@
     "encrypt": "tsx scripts/encrypt-data.ts"
   },
   "dependencies": {
+    "@be-enlighten/enspace-sdk-core": "^0.17.0",
+    "@be-enlighten/enspace-sdk-schemas": "^0.17.0",
+    "@be-enlighten/enspace-sdk-ui": "^0.17.0",
+    "@be-enlighten/enspace-sdk-vue": "^0.17.0",
     "@iconify-json/lucide": "^1.2.137",
     "@internationalized/date": "^3.12.4",
     "@nuxt/ui": "^4.11.2",
+    "@tanstack/vue-table": "^8.21.3",
     "@vueuse/core": "^14.4.0",
     "@vueuse/nuxt": "^14.4.0",
     "date-fns": "^4.4.0",
@@ -35,6 +40,6 @@
     "vitest": "^5.0.3",
     "vue-tsc": "^3.3.11"
   },
-  "packageManager": "pnpm@12.6.0",
+  "packageManager": "pnpm@10.28.0",
   "description": "Painel de status das próximas releases do ENSPACE (somente a página; os dados ficam em um repositório privado)."
 }

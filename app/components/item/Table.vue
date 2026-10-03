@@ -1,67 +1,70 @@
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui'
+import type { EnTableColumn } from '@be-enlighten/enspace-sdk-ui/base'
 import { formatRelative } from '#shared/domain/format'
 import { IMPACT_LABEL } from '#shared/domain/labels'
 import type { ReleaseItem } from '#shared/domain/model'
 
 const props = defineProps<{ items: ReleaseItem[], version: string, changed: Set<string> }>()
 
-const ItemStatusBadge = resolveComponent('ItemStatusBadge')
-const ItemKindBadge = resolveComponent('ItemKindBadge')
-const ItemFlags = resolveComponent('ItemFlags')
-const ItemProgress = resolveComponent('ItemProgress')
-const ULink = resolveComponent('ULink')
-
 const now = useNow({ interval: 30_000 })
 const { itemLink } = useItemLink()
 
-const columns: TableColumn<ReleaseItem>[] = [{
-  accessorKey: 'title',
-  header: 'Item',
-  cell: ({ row }) => h('div', { class: 'flex flex-col gap-1.5 min-w-64' }, [
-    h(ULink, { to: itemLink(props.version, row.original.id), class: 'flex flex-col' }, () => [
-      h('span', { class: 'font-mono text-xs text-muted' }, row.original.id),
-      h('span', { class: 'font-medium text-highlighted whitespace-normal' }, row.original.title)
-    ]),
-    h(ItemFlags, { item: row.original }),
-    row.original.movedTo ? h('span', { class: 'text-xs text-muted' }, `Movido para a ${row.original.movedTo}`) : null
-  ])
-}, {
-  accessorKey: 'status',
-  header: 'Status',
-  cell: ({ row }) => h(ItemStatusBadge, { status: row.original.status })
-}, {
-  id: 'progress',
-  header: 'Andamento',
-  cell: ({ row }) => h('div', { class: 'w-28' }, [h(ItemProgress, { item: row.original })])
-}, {
-  accessorKey: 'kind',
-  header: 'Classificação',
-  cell: ({ row }) => h(ItemKindBadge, { kind: row.original.kind })
-}, {
-  accessorKey: 'module',
-  header: 'Área',
-  cell: ({ row }) => row.original.module ?? '—'
-}, {
-  accessorKey: 'impact',
-  header: 'Impacto',
-  cell: ({ row }) => row.original.impact ? IMPACT_LABEL[row.original.impact] : '—'
-}, {
-  accessorKey: 'updatedAt',
-  header: 'Atualizado',
-  cell: ({ row }) => h('span', { class: 'text-muted whitespace-nowrap' }, formatRelative(row.original.updatedAt, now.value))
-}]
+// Lista padrão do ENSPACE (EnTable do SDK). Cada célula sai de um slot #cell-{key}.
+const columns: EnTableColumn[] = [
+  { key: 'title', label: 'Item' },
+  { key: 'status', label: 'Status' },
+  { key: 'progress', label: 'Andamento' },
+  { key: 'kind', label: 'Classificação' },
+  { key: 'module', label: 'Área' },
+  { key: 'impact', label: 'Impacto' },
+  { key: 'updatedAt', label: 'Atualizado' }
+]
+// O EnTable tem layout fixo: sem largura, cada coluna fica com 150px. Item é a
+// mais larga; a soma (1080px) cabe na área de conteúdo de uma tela de 1440px.
+const columnSizing = { title: 320, status: 160, progress: 120, kind: 130, module: 130, impact: 90, updatedAt: 130 }
 
-function rowClass(row: { original: ReleaseItem }) {
-  return props.changed.has(`${props.version}:${row.original.id}`) ? 'bg-primary/5' : ''
-}
+// O slot do EnTable entrega a linha sem tipo: os acessos passam por funções tipadas.
+const isChanged = (item: ReleaseItem) => props.changed.has(`${props.version}:${item.id}`)
+const impactLabel = (item: ReleaseItem) => item.impact ? IMPACT_LABEL[item.impact] : '—'
 </script>
 
 <template>
-  <UTable
-    :data="items"
+  <EnTable
     :columns="columns"
-    :meta="{ class: { tr: rowClass } }"
+    :rows="items"
+    :column-sizing="columnSizing"
     class="shrink-0"
-  />
+  >
+    <template #cell-title="{ row }">
+      <div class="flex flex-col gap-1.5">
+        <ULink :to="itemLink(version, row.id)" class="flex flex-col">
+          <span class="font-mono text-xs text-muted">{{ row.id }}</span>
+          <span class="font-medium text-highlighted">{{ row.title }}</span>
+        </ULink>
+        <ItemFlags :item="row" />
+        <span v-if="row.movedTo" class="text-xs text-muted">Movido para a {{ row.movedTo }}</span>
+      </div>
+    </template>
+    <template #cell-status="{ row }">
+      <ItemStatusBadge :status="row.status" />
+    </template>
+    <template #cell-progress="{ row }">
+      <div class="w-28">
+        <ItemProgress :item="row" />
+      </div>
+    </template>
+    <template #cell-kind="{ row }">
+      <ItemKindBadge :kind="row.kind" />
+    </template>
+    <template #cell-module="{ row }">
+      {{ row.module ?? '—' }}
+    </template>
+    <template #cell-impact="{ row }">
+      {{ impactLabel(row) }}
+    </template>
+    <template #cell-updatedAt="{ row }">
+      <span v-if="isChanged(row)" class="font-medium text-primary">Atualizado agora</span>
+      <span v-else class="text-muted">{{ formatRelative(row.updatedAt, now) }}</span>
+    </template>
+  </EnTable>
 </template>
