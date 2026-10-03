@@ -23,7 +23,8 @@ const [input, output] = process.argv.slice(2).filter(a => !a.startsWith('--'))
 const demo = process.argv.includes('--demo')
 if (!input || !output) fail('Uso: encrypt-data <entrada.json> <saida.enc.json>')
 
-const password = demo ? DEMO.password : process.env.PANEL_PASSWORD
+// trim: igual ao painel, que ignora espaços nas pontas da senha digitada
+const password = demo ? DEMO.password : process.env.PANEL_PASSWORD?.trim()
 const salt = demo ? DEMO.salt : process.env.PANEL_SALT
 if (!password) fail('Defina PANEL_PASSWORD (a senha do painel).')
 if (!salt) fail('Defina PANEL_SALT (valor fixo em base64, gerado uma vez).')

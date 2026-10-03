@@ -39,7 +39,8 @@ async function onSubmit(event: FormSubmitEvent<z.output<typeof schema>>) {
   errorMessage.value = null
   try {
     const file = await fetchFile()
-    await unlock(event.data.password, file, event.data.remember ?? true)
+    // trim: espaços colados junto com a senha não devem impedir a entrada
+    await unlock(event.data.password.trim(), file, event.data.remember ?? true)
     await navigateTo(safeNext(route.query.next))
   } catch (err) {
     errorMessage.value = err instanceof WrongKeyError
