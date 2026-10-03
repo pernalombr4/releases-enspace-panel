@@ -4,7 +4,7 @@ import { CalendarDate, getLocalTimeZone, today, type DateValue } from '@internat
 import { breakpointsTailwind } from '@vueuse/core'
 import { calendarEntries, hasDetails, originalDateEntries, undatedReleases, type CalendarEntry } from '#shared/domain/calendar'
 import { formatDay, formatDayYear, formatWeekday } from '#shared/domain/format'
-import { CALENDAR_STATUS_META, RELEASE_TYPE_META } from '#shared/domain/labels'
+import { CALENDAR_NEW_DATE_META, CALENDAR_STATUS_META, RELEASE_TYPE_META } from '#shared/domain/labels'
 import { RELEASE_TYPES, type ReleaseType } from '#shared/domain/vocabulary'
 
 useSeoMeta({ title: 'Calendário · ENSPACE Releases' })
@@ -69,6 +69,10 @@ const periodLabel = computed(() => {
 })
 
 const byDay = (a: CalendarEntry, b: CalendarEntry) => a.date.localeCompare(b.date)
+
+// Release adiada aparece duas vezes na lista: na data original, riscada e com
+// "Adiada", e na data nova, com "Nova data".
+const listBadge = (entry: CalendarEntry) => entry.status === 'postponed' ? CALENDAR_NEW_DATE_META : CALENDAR_STATUS_META[entry.status]
 const selectedEntries = computed(() => {
   const day = selected.value?.toString()
   return day ? [...byDate.value.get(day) ?? [], ...movedByDate.value.get(day) ?? []] : []
@@ -248,7 +252,7 @@ const columns: TableColumn<CalendarEntry>[] = [{
               class="flex items-start gap-4 p-4"
               :class="{ 'opacity-75': entry.status === 'moved' }"
             >
-              <div class="w-12 shrink-0 text-center">
+              <div class="w-12 shrink-0 text-center" :class="{ 'line-through': entry.status === 'moved' }">
                 <p class="text-xs uppercase text-muted">
                   {{ formatWeekday(entry.date) }}
                 </p>
@@ -262,12 +266,12 @@ const columns: TableColumn<CalendarEntry>[] = [{
 
               <div class="flex min-w-0 flex-1 flex-col gap-1">
                 <div class="flex flex-wrap items-center gap-1.5">
-                  <span class="font-medium text-highlighted">Release {{ entry.release.version }}</span>
+                  <span class="font-medium text-highlighted" :class="{ 'line-through': entry.status === 'moved' }">Release {{ entry.release.version }}</span>
                   <ReleaseTypeBadge :type="entry.type" />
                   <UBadge
-                    :label="CALENDAR_STATUS_META[entry.status].label"
-                    :icon="CALENDAR_STATUS_META[entry.status].icon"
-                    :color="CALENDAR_STATUS_META[entry.status].color"
+                    :label="listBadge(entry).label"
+                    :icon="listBadge(entry).icon"
+                    :color="listBadge(entry).color"
                     variant="subtle"
                   />
                 </div>

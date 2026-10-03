@@ -213,5 +213,8 @@ export const CALENDAR_STATUS_META: Record<'released' | 'postponed' | 'planned' |
   released: { label: 'Liberada', color: 'success', icon: 'i-lucide-rocket' },
   postponed: { label: 'Adiada', color: 'warning', icon: 'i-lucide-calendar-x' },
   planned: { label: 'Prevista', color: 'neutral', icon: 'i-lucide-calendar-clock' },
-  moved: { label: 'Data original', color: 'neutral', icon: 'i-lucide-calendar-minus' }
+  moved: { label: 'Adiada', color: 'warning', icon: 'i-lucide-calendar-x' }
 }
+
+/** Na lista do calendário, a release adiada aparece na data nova com este selo (a data original leva "Adiada"). */
+export const CALENDAR_NEW_DATE_META: Omit<Meta, 'description'> = { label: 'Nova data', color: 'warning', icon: 'i-lucide-calendar-clock' }
