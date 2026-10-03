@@ -12,7 +12,8 @@
     "typecheck": "nuxt typecheck && tsc -p scripts/tsconfig.json",
     "test": "vitest run",
     "demo:data": "tsx scripts/encrypt-data.ts --demo fixtures/demo.json public/data/releases.enc.json",
-    "encrypt": "tsx scripts/encrypt-data.ts"
+    "encrypt": "tsx scripts/encrypt-data.ts",
+    "sync": "tsx scripts/sync-enspace.ts"
   },
   "dependencies": {
     "@be-enlighten/enspace-sdk-core": "^0.17.0",
