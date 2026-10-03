@@ -169,12 +169,20 @@ const columns: TableColumn<CalendarEntry>[] = [{
 
       <div class="grid gap-4 sm:gap-6 xl:grid-cols-[auto_minmax(0,1fr)]">
         <UCard>
+          <!--
+            Cada mês mostra só os próprios dias: sem os dias dos meses vizinhos
+            (que repetiam as releases quando aparecem dois meses) e só com as
+            semanas que o mês ocupa (5 na maioria, 6 quando o mês pede).
+          -->
           <UCalendar
             v-model="selected"
             v-model:placeholder="placeholder"
             :number-of-months="monthsShown"
+            :fixed-weeks="false"
             size="lg"
             color="neutral"
+            variant="soft"
+            :ui="{ cellTrigger: 'data-outside-view:invisible' }"
           >
             <!-- O dia com release vira um selo no estilo do tipo: major sólido, minor suave, patch contornado. -->
             <template #day="{ day }">
