@@ -3,7 +3,7 @@
 # Roda a cada push na main: mudanças de código ou um novo data/releases.enc.json
 # enviado pelo repositório privado de dados. Este repositório nunca tem dados
 # abertos; o arquivo publicado é criptografado com a senha do painel.
-name: Publicar painel
+name: Deploy panel
 
 on:
   push:
@@ -45,7 +45,7 @@ jobs:
       - name: Test
         run: pnpm run test
 
-      - name: Dados criptografados
+      - name: Copy encrypted data
         run: |
           mkdir -p public/data
           if [ -f data/releases.enc.json ]; then
