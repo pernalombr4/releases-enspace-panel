@@ -35,6 +35,16 @@
     "vitest": "^5.0.3",
     "vue-tsc": "^3.3.11"
   },
-  "packageManager": "pnpm@12.6.0",
-  "description": "Painel de status das próximas releases do ENSPACE (somente a página; os dados ficam em um repositório privado)."
+  "packageManager": "pnpm@10.28.0",
+  "description": "Painel de status das próximas releases do ENSPACE (somente a página; os dados ficam em um repositório privado).",
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "@parcel/watcher",
+      "@tailwindcss/oxide",
+      "esbuild",
+      "maplibre-gl",
+      "unrs-resolver",
+      "vue-demi"
+    ]
+  }
 }
