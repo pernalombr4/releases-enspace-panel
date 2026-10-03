@@ -1,22 +1,25 @@
 <script setup lang="ts">
-import { formatRelative } from '#shared/domain/format'
+import { formatDateTime, formatRelative } from '#shared/domain/format'
 
 defineProps<{ collapsed?: boolean }>()
 
 const config = useRuntimeConfig()
-const { fetchedAt, error, loading, refresh } = useReleases()
+const { data, fetchedAt, error, loading, refresh } = useReleases()
 const now = useNow({ interval: 1000 })
 
 const state = computed(() => {
   if (error.value) return { color: 'error' as const, label: 'Sem conexão' }
   if (!fetchedAt.value) return { color: 'neutral' as const, label: 'Carregando' }
   const stale = now.value.getTime() - Date.parse(fetchedAt.value) > config.public.refreshSeconds * 3000
-  return stale ? { color: 'warning' as const, label: 'Sincronizando' } : { color: 'success' as const, label: 'Ao vivo' }
+  return stale ? { color: 'warning' as const, label: 'Sincronizando' } : { color: 'success' as const, label: 'Conectado' }
 })
 
-const detail = computed(() => fetchedAt.value
-  ? `atualizado ${formatRelative(fetchedAt.value, now.value)}`
-  : 'buscando dados…')
+// O painel confere o arquivo a cada minuto, mas os dados mudam quando o time de
+// Produto (ou a sincronização diária com o Enspace) publica: mostra a data deles.
+const detail = computed(() => {
+  if (data.value?.updatedAt) return `dados de ${formatDateTime(data.value.updatedAt)}`
+  return fetchedAt.value ? `conferido ${formatRelative(fetchedAt.value, now.value)}` : 'buscando dados…'
+})
 </script>
 
 <template>
