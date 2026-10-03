@@ -170,6 +170,27 @@ export function describeIssues(error: z.ZodError): string {
     .join('\n')
 }
 
+export type FileCheck = { success: true, data: ReleasesFile } | { success: false, error: string }
+
+/**
+ * Validação completa do arquivo de dados, usada por quem publica
+ * (scripts/encrypt-data.ts) e pela sincronização com o Enspace: o schema,
+ * versões únicas e IDs de item únicos dentro de cada release.
+ */
+export function checkReleasesFile(json: unknown): FileCheck {
+  const parsed = ReleasesFileSchema.safeParse(json)
+  if (!parsed.success) return { success: false, error: `campos inválidos:\n${describeIssues(parsed.error)}` }
+
+  const repeated = (values: string[]) => [...new Set(values.filter((v, i) => values.indexOf(v) !== i))]
+  const versions = repeated(parsed.data.releases.map(r => r.version))
+  if (versions.length) return { success: false, error: `versões repetidas: ${versions.join(', ')}` }
+  for (const release of parsed.data.releases) {
+    const ids = repeated(release.items.map(i => i.id))
+    if (ids.length) return { success: false, error: `IDs repetidos na release ${release.version}: ${ids.join(', ')}` }
+  }
+  return { success: true, data: parsed.data }
+}
+
 /** Compara versões "3.10" > "3.2" numericamente. */
 export function compareVersions(a: string, b: string): number {
   const pa = a.split(/[.-]/).map(n => Number.parseInt(n, 10))

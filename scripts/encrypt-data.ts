@@ -9,7 +9,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { encryptJson } from '../shared/domain/crypto'
-import { ReleasesFileSchema, describeIssues } from '../shared/domain/model'
+import { checkReleasesFile } from '../shared/domain/model'
 
 const DEMO = { password: 'demo', salt: 'ZGVtby1zYWx0LWVuc3BhY2UtcmVsZWFzZXM=' }
 const MIN_PASSWORD_LENGTH = 12
@@ -39,14 +39,9 @@ try {
   fail(`Não foi possível ler ${input} como JSON: ${(error as Error).message}`)
 }
 
-const parsed = ReleasesFileSchema.safeParse(json)
-if (!parsed.success) fail(`${input} tem campos inválidos:\n${describeIssues(parsed.error)}`)
-
-for (const release of parsed.data.releases) {
-  const ids = release.items.map(i => i.id)
-  const repeated = ids.filter((id, i) => ids.indexOf(id) !== i)
-  if (repeated.length) fail(`IDs repetidos na release ${release.version}: ${[...new Set(repeated)].join(', ')}`)
-}
+// Mesma validação da sincronização com o Enspace (scripts/sync-enspace.ts).
+const parsed = checkReleasesFile(json)
+if (!parsed.success) fail(`${input}: ${parsed.error}`)
 
 const encrypted = await encryptJson(parsed.data, password, salt)
 await mkdir(dirname(output), { recursive: true })
