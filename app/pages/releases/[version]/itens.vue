@@ -3,6 +3,7 @@ import { plural } from '#shared/domain/format'
 import { BOARD_ORDER, ITEM_KIND, ITEM_STATUS, KIND_ORDER } from '#shared/domain/labels'
 import { MARKER_KEYS, MARKER_META, hasMarker, type MarkerKey } from '#shared/domain/markers'
 import type { Release, ReleaseItem } from '#shared/domain/model'
+import { ticketSearchText } from '#shared/domain/tickets'
 import { ITEM_STATUSES, simplify } from '#shared/domain/vocabulary'
 
 const props = defineProps<{ release: Release }>()
@@ -59,7 +60,7 @@ function matches(item: ReleaseItem) {
   if (status.value !== ALL && item.status !== status.value) return false
   if (marker.value !== ALL && !hasMarker(item, marker.value as MarkerKey)) return false
   if (search.value) {
-    const haystack = simplify([item.id, item.title, item.summary, item.module, item.customerImpact, item.owner, item.requestedBy, item.note, item.audience, ...item.tickets ?? []].filter(Boolean).join(' '))
+    const haystack = simplify([item.id, item.title, item.summary, item.module, item.customerImpact, item.owner, item.requestedBy, item.note, item.audience, ticketSearchText(item)].filter(Boolean).join(' '))
     return simplify(search.value).split(' ').every(term => haystack.includes(term))
   }
   return true
@@ -93,7 +94,7 @@ const isChanged = (id: string) => changed.value.has(`${props.release.version}:${
       <UInput
         v-model="search"
         icon="i-lucide-search"
-        placeholder="Buscar por título, código, solicitação…"
+        placeholder="Buscar por título, código, chamado, cliente…"
         class="w-full sm:max-w-xs"
       />
       <USelect v-model="kind" :items="kindItems" class="min-w-44" />

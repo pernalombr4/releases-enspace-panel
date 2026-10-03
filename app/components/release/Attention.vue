@@ -76,7 +76,11 @@ const groups = computed(() => {
       </div>
     </template>
 
-    <div v-if="groups.length" class="flex flex-col gap-5">
+    <ReleaseTickets :release="release" />
+
+    <USeparator class="my-5" />
+
+    <div v-if="groups.length" class="grid gap-5 lg:grid-cols-2">
       <div v-for="group in groups" :key="group.key" class="flex flex-col gap-1">
         <div class="flex items-center gap-2">
           <UIcon :name="group.icon" class="size-4 shrink-0" :class="TEXT_COLOR[group.color]" />
@@ -116,7 +120,7 @@ const groups = computed(() => {
     <UEmpty
       v-else
       icon="i-lucide-circle-check"
-      title="Nada pendente para as outras áreas nesta release"
+      title="Sem bloqueios, riscos ou avisos de comunicação nesta release"
       variant="naked"
     />
   </UCard>

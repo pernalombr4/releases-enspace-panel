@@ -45,6 +45,21 @@ const MilestoneSchema = z.object({
   done: z.boolean().optional()
 })
 
+/**
+ * Chamado (ou solicitação) atendido pelo item. Aceita só o código ("REQ…") ou
+ * o chamado completo vindo do Enspace: referência original, título e cliente.
+ */
+const TicketSchema = z.union([
+  z.string().trim().min(1).transform((ref): { ref: string, title?: string, client?: string } => ({ ref })),
+  z.object({
+    /** Referência original, ex.: "CHAE51BA7F0F9E7468CADFB1DD61DCD6". */
+    ref: z.string().trim().min(1),
+    title: optionalText,
+    /** Cliente relacionado ao chamado. */
+    client: optionalText
+  })
+])
+
 export const ReleaseItemSchema = z.object({
   /** Referência visível, ex.: "ENS-1201". */
   id: z.string().min(1),
@@ -68,8 +83,8 @@ export const ReleaseItemSchema = z.object({
   clientCount: z.number().int().min(0).optional(),
   /** Pode não entrar nesta release; o motivo vai em `note`. */
   atRisk: z.boolean().optional(),
-  /** Códigos de solicitações ou chamados vinculados (ex.: REQ…), para o Suporte localizar o item. */
-  tickets: z.array(z.string().trim().min(1)).optional(),
+  /** Chamados atendidos pelo item, para CS e Suporte saberem o que foi resolvido e para quem. */
+  tickets: z.array(TicketSchema).optional(),
   /** Squad / pessoa responsável. */
   owner: optionalText,
   /** Quem recebe: "Todos os clientes", "Plano Enterprise", "Beta fechado"... */
@@ -140,6 +155,7 @@ export const ReleasesFileSchema = z.object({
 })
 
 export type Link = z.infer<typeof LinkSchema>
+export type Ticket = z.infer<typeof TicketSchema>
 export type Milestone = z.infer<typeof MilestoneSchema>
 export type Postponement = z.infer<typeof PostponementSchema>
 export type ReleaseItem = z.infer<typeof ReleaseItemSchema>

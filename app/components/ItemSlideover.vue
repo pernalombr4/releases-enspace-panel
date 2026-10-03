@@ -104,12 +104,22 @@ const facts = computed(() => {
 
         <section v-if="item.tickets?.length">
           <h3 class="mb-1 text-xs font-semibold uppercase text-muted">
-            Solicitações vinculadas
+            Chamados atendidos
           </h3>
-          <ul class="flex flex-col gap-1">
-            <li v-for="ticket in item.tickets" :key="ticket" class="flex items-center gap-2">
-              <UIcon name="i-lucide-ticket" class="size-4 shrink-0 text-muted" />
-              <span class="font-mono text-xs text-highlighted break-all">{{ ticket }}</span>
+          <ul class="flex flex-col gap-2">
+            <li v-for="ticket in item.tickets" :key="ticket.ref" class="flex items-start gap-2">
+              <UIcon name="i-lucide-ticket" class="mt-0.5 size-4 shrink-0 text-muted" />
+              <div class="min-w-0 text-sm">
+                <p class="font-mono text-xs text-highlighted break-all">
+                  {{ ticket.ref }}
+                </p>
+                <p v-if="ticket.title" class="text-default">
+                  {{ ticket.title }}
+                </p>
+                <p v-if="ticket.client" class="text-muted">
+                  Cliente: <span class="font-medium text-highlighted">{{ ticket.client }}</span>
+                </p>
+              </div>
             </li>
           </ul>
         </section>

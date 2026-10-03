@@ -8,6 +8,7 @@ import {
   type Release,
   type ReleaseItem
 } from '../domain/model'
+import { chamadosByDemanda } from './chamados'
 
 // Converte os registros da API do Enspace (GET /ws/types/{slug}/items) no modelo
 // do painel. Cada registro tem a forma:
@@ -217,9 +218,12 @@ export function mapRelease(record: EnspaceRecord): unknown {
  */
 export function buildReleases(
   releaseRecords: EnspaceRecord[],
-  itemRecords: EnspaceRecord[]
+  itemRecords: EnspaceRecord[],
+  /** Registros do Type `chamados`: os com cliente viram os chamados atendidos de cada demanda. */
+  chamadoRecords: EnspaceRecord[] = []
 ): { releases: Release[], warnings: string[] } {
   const warnings: string[] = []
+  const tickets = chamadosByDemanda(itemRecords, chamadoRecords)
   const byVersion = new Map<string, { input: object, items: ReleaseItem[] }>()
 
   for (const record of releaseRecords) {
@@ -238,7 +242,8 @@ export function buildReleases(
       warnings.push(`Item ${recordLabel(record)}: sem release associada`)
       continue
     }
-    const parsed = ReleaseItemSchema.safeParse(input)
+    const linked = tickets.get(String(record.id))
+    const parsed = ReleaseItemSchema.safeParse(linked ? { ...(input as object), tickets: linked } : input)
     if (!parsed.success) {
       warnings.push(`Item ${recordLabel(record)}: ${describeIssues(parsed.error)}`)
       continue
