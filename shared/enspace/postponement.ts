@@ -1,5 +1,5 @@
 import { PostponementSchema, type Postponement, type Release } from '../domain/model'
-import { bool, day, postponementFrom, text } from './mapping'
+import { bool, day, text } from './values'
 
 // Leitura do endpoint de adiamento de releases do Enspace.
 //
@@ -17,6 +17,23 @@ const FIELD_ALIASES = {
   reason: ['postponed_reason', 'reason', 'motivo'],
   announcedAt: ['postponed_at', 'announced_at', 'updated_at']
 } as const
+
+/** Só informa adiamento quando o campo "adiada" foi preenchido (sim ou não). */
+export function postponementFrom(value: {
+  postponed?: boolean
+  originalDate?: string
+  reason?: string
+  announcedAt?: string
+}) {
+  if (value.postponed === undefined) return undefined
+  return {
+    postponed: value.postponed,
+    originalDate: value.originalDate,
+    reason: value.reason,
+    // Data de comunicação inválida não deve derrubar a informação de adiamento.
+    announcedAt: value.announcedAt && !Number.isNaN(Date.parse(value.announcedAt)) ? value.announcedAt : undefined
+  }
+}
 
 export interface PostponementUpdate {
   version: string

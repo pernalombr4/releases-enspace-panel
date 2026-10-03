@@ -15,6 +15,8 @@
     "encrypt": "tsx scripts/encrypt-data.ts"
   },
   "dependencies": {
+    "@be-enlighten/enspace-sdk-core": "^0.17.0",
+    "@be-enlighten/enspace-sdk-schemas": "^0.17.0",
     "@iconify-json/lucide": "^1.2.137",
     "@internationalized/date": "^3.12.4",
     "@nuxt/ui": "^4.11.2",

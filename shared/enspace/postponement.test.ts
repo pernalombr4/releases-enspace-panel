@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { ReleaseSchema } from '../domain/model'
-import { buildReleases } from './mapping'
 import { applyPostponements, parsePostponements } from './postponement'
 
 describe('parsePostponements', () => {
@@ -38,16 +37,5 @@ describe('applyPostponements', () => {
     expect(r31?.postponement?.postponed).toBe(true)
     expect(r31?.targetDate).toBe('2026-11-13')
     expect(r32).toBe(releases[1])
-  })
-})
-
-describe('campos de adiamento no Type de releases', () => {
-  it('mapeia "adiada" sim/não, data original e motivo', () => {
-    const { releases } = buildReleases([
-      { id: 1, updated_at: '2026-10-01T10:00:00Z', data: { version: '3.1', stage: 'Em desenvolvimento', target_date: '2026-11-13', postponed: 'Sim', original_target_date: '2026-10-30', postponed_reason: 'Ajuste de escopo' } },
-      { id: 2, updated_at: '2026-10-01T10:00:00Z', data: { version: '3.2', stage: 'Em planejamento' } }
-    ], [])
-    expect(releases[0]?.postponement).toEqual({ postponed: true, originalDate: '2026-10-30', reason: 'Ajuste de escopo', announcedAt: undefined })
-    expect(releases[1]?.postponement).toBeUndefined()
   })
 })
