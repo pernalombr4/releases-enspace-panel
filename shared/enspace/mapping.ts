@@ -5,7 +5,8 @@ import {
   describeIssues,
   type Link,
   type Milestone,
-  type Release
+  type Release,
+  type ReleaseItem
 } from '../domain/model'
 
 // Converte os registros da API do Enspace (GET /ws/types/{slug}/items) no modelo
@@ -209,24 +210,26 @@ export function mapRelease(record: EnspaceRecord): unknown {
 }
 
 /**
- * Monta as releases a partir dos registros dos dois Types. Registros inválidos
- * são ignorados e reportados em `warnings`, para um item mal preenchido não
- * derrubar o painel inteiro.
+ * Monta as releases a partir dos registros dos dois Types. Cada release é
+ * validada só depois de receber as suas demandas, porque a fase e o andamento
+ * saem delas. Registros inválidos são ignorados e reportados em `warnings`,
+ * para um item mal preenchido não derrubar o painel inteiro.
  */
 export function buildReleases(
   releaseRecords: EnspaceRecord[],
   itemRecords: EnspaceRecord[]
 ): { releases: Release[], warnings: string[] } {
   const warnings: string[] = []
-  const byVersion = new Map<string, Release>()
+  const byVersion = new Map<string, { input: object, items: ReleaseItem[] }>()
 
   for (const record of releaseRecords) {
-    const parsed = ReleaseSchema.safeParse(mapRelease(record))
+    const input = mapRelease(record) as object
+    const parsed = ReleaseSchema.safeParse(input)
     if (!parsed.success) {
       warnings.push(`Release ${recordLabel(record)}: ${describeIssues(parsed.error)}`)
       continue
     }
-    byVersion.set(parsed.data.version, parsed.data)
+    byVersion.set(parsed.data.version, { input, items: [] })
   }
 
   for (const record of itemRecords) {
@@ -240,15 +243,14 @@ export function buildReleases(
       warnings.push(`Item ${recordLabel(record)}: ${describeIssues(parsed.error)}`)
       continue
     }
-    let release = byVersion.get(version)
-    if (!release) {
-      // Item aponta para uma versão ainda não cadastrada: cria uma release mínima.
-      release = ReleaseSchema.parse({ version, stage: 'planning' })
-      byVersion.set(version, release)
-    }
-    release.items.push(parsed.data)
+    // Item aponta para uma versão ainda não cadastrada: cria uma release mínima.
+    const entry = byVersion.get(version) ?? { input: { version }, items: [] }
+    entry.items.push(parsed.data)
+    byVersion.set(version, entry)
   }
 
-  const releases = [...byVersion.values()].sort((a, b) => compareVersions(a.version, b.version))
+  const releases = [...byVersion.values()]
+    .map(({ input, items }) => ReleaseSchema.parse({ ...input, items }))
+    .sort((a, b) => compareVersions(a.version, b.version))
   return { releases, warnings }
 }

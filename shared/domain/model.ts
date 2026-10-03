@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { furthestStage, stageFromItems } from './progress'
 import {
   ITEM_KINDS,
   ITEM_ORIGINS,
@@ -105,7 +106,11 @@ export const ReleaseSchema = z.object({
   type: enumOf('releaseType', RELEASE_TYPES).optional(),
   name: optionalText,
   summary: optionalText,
-  /** Quando vazio: "released" se houver releasedAt, senão "planning" (releases antigas só com versão e data). */
+  /**
+   * Fase informada pelo time. O painel mostra a mais avançada entre esta e a que
+   * os itens indicam (ver stageFromItems). Vazio: "released" se houver releasedAt,
+   * senão "planning".
+   */
   stage: enumOf('stage', RELEASE_STAGES).optional(),
   /** Quando vazio, o painel calcula a partir de prazo e bloqueios. */
   health: enumOf('health', RELEASE_HEALTH).optional(),
@@ -120,7 +125,10 @@ export const ReleaseSchema = z.object({
   items: z.array(ReleaseItemSchema).default([])
 }).transform(release => ({
   ...release,
-  stage: release.stage ?? (release.releasedAt ? 'released' as const : 'planning' as const)
+  stage: furthestStage(
+    release.stage ?? (release.releasedAt ? 'released' : 'planning'),
+    stageFromItems(release.items)
+  )
 }))
 
 export const ReleasesFileSchema = z.object({

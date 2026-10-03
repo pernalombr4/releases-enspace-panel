@@ -126,6 +126,11 @@ export const RELEASE_STAGE: Record<ReleaseStage, Omit<Meta, 'color'>> = {
     description: 'Release completa sendo validada antes de ir para produção.',
     icon: 'i-lucide-test-tube-diagonal'
   },
+  ready: {
+    label: 'Pronta para subir',
+    description: 'Todos os itens prontos; aguardando a data de subida.',
+    icon: 'i-lucide-package-check'
+  },
   released: {
     label: 'Liberada',
     description: 'Publicada em produção.',

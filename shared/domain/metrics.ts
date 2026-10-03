@@ -1,6 +1,10 @@
 import type { Milestone, Release, ReleaseItem } from './model'
+import { itemProgress } from './progress'
 import type { ItemKind, ItemStatus, ReleaseHealth } from './vocabulary'
 import { ITEM_KINDS, ITEM_STATUSES } from './vocabulary'
+
+/** A uma semana da subida, os itens deveriam estar, em média, ao menos em testes. */
+const EXPECTED_A_WEEK_BEFORE = itemProgress({ status: 'testing' }) ?? 0
 
 const DAY_MS = 86_400_000
 
@@ -26,15 +30,17 @@ export interface Progress {
   /** Prontos para release + liberados. */
   done: number
   total: number
-  /** 0–100, arredondado. */
+  /** Andamento de 0 a 100: média do andamento de cada item (ver itemProgress). */
   percent: number
 }
 
+/** Andamento da release a partir das suas demandas; adiadas ficam de fora. */
 export function releaseProgress(release: Release): Progress {
   const items = scopedItems(release)
   const done = items.filter(i => i.status === 'ready' || i.status === 'released').length
   const total = items.length
-  return { done, total, percent: total === 0 ? 0 : Math.round((done / total) * 100) }
+  const sum = items.reduce((acc, item) => acc + (itemProgress(item) ?? 0), 0)
+  return { done, total, percent: total === 0 ? 0 : Math.round(sum / total) }
 }
 
 /** "2026-10-30" interpretado como data local (sem deslocar o dia por fuso). */
@@ -73,7 +79,7 @@ export function releaseHealth(release: Release, now: Date): ReleaseHealth {
 
   // Sem itens publicados ainda, não há progresso para avaliar.
   const { percent, total } = releaseProgress(release)
-  if (warning || (days <= 7 && total > 0 && percent < 60)) return 'at_risk'
+  if (warning || (days <= 7 && total > 0 && percent < EXPECTED_A_WEEK_BEFORE)) return 'at_risk'
   return 'on_track'
 }
 

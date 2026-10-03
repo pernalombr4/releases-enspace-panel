@@ -48,7 +48,7 @@ const segments = computed<ProgressGroupItem[]>(() => PROGRESS_ORDER
     <div v-if="progress.total" class="flex flex-col gap-4">
       <div class="flex items-baseline gap-2">
         <span class="text-4xl font-bold text-highlighted">{{ progress.percent }}%</span>
-        <span class="text-sm text-muted">{{ progress.done }} de {{ progress.total }} prontos ou liberados</span>
+        <span class="text-sm text-muted">de andamento · {{ progress.done }} de {{ progress.total }} prontos ou liberados</span>
       </div>
       <UProgressGroup :items="segments" :max="progress.total" size="lg" />
       <p v-if="counts.postponed" class="text-xs text-muted">

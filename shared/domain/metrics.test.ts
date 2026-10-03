@@ -16,11 +16,19 @@ const release = (over: Record<string, unknown>): Release =>
 const now = new Date(2026, 9, 2, 12) // 02/10/2026, horário local
 
 describe('releaseProgress', () => {
-  it('conta prontos e liberados como concluídos e ignora adiados', () => {
+  it('faz a média do andamento de cada item e ignora adiados', () => {
     const r = release({
       items: [item('a', 'released'), item('b', 'ready'), item('c', 'testing'), item('d', 'postponed')]
     })
-    expect(releaseProgress(r)).toEqual({ done: 2, total: 3, percent: 67 })
+    // 100 + 100 + 67, dividido por 3 itens
+    expect(releaseProgress(r)).toEqual({ done: 2, total: 3, percent: 89 })
+  })
+
+  it('anda conforme os itens avançam, antes mesmo de algum ficar pronto', () => {
+    const planned = release({ items: [item('a', 'planned'), item('b', 'planned'), item('c', 'planned')] })
+    const moving = release({ items: [item('a', 'in_progress'), item('b', 'testing'), item('c', 'planned')] })
+    expect(releaseProgress(planned).percent).toBe(0)
+    expect(releaseProgress(moving)).toEqual({ done: 0, total: 3, percent: 33 })
   })
 
   it('não divide por zero sem itens', () => {
@@ -50,9 +58,11 @@ describe('releaseHealth', () => {
     expect(releaseHealth(r, now)).toBe('at_risk')
   })
 
-  it('marca atenção quando falta pouco e o progresso é baixo', () => {
-    const r = release({ targetDate: '2026-10-06', items: [item('a', 'in_progress'), item('b', 'ready')] })
-    expect(releaseHealth(r, now)).toBe('at_risk')
+  it('marca atenção quando falta uma semana e os itens não chegaram a testes', () => {
+    const late = release({ targetDate: '2026-10-06', items: [item('a', 'in_progress'), item('b', 'testing')] })
+    const fine = release({ targetDate: '2026-10-06', items: [item('a', 'testing'), item('b', 'ready')] })
+    expect(releaseHealth(late, now)).toBe('at_risk')
+    expect(releaseHealth(fine, now)).toBe('on_track')
   })
 
   it('fica no prazo sem riscos', () => {

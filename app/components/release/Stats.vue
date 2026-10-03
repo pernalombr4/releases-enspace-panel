@@ -24,7 +24,7 @@ const stats = computed(() => {
       ? { label: original ? `adiada · antes ${formatDay(original)}` : 'adiada', color: 'warning' as const }
       : !released && r.targetDate ? { label: formatCountdown(r.targetDate, now.value), color: 'neutral' as const } : undefined
   }, {
-    title: 'Progresso',
+    title: 'Andamento',
     icon: 'i-lucide-chart-no-axes-column-increasing',
     value: `${progress.percent}%`,
     badge: { label: `${progress.done} de ${progress.total} prontos`, color: 'primary' as const }

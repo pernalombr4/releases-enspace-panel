@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { BOARD_ORDER, ITEM_KIND, ITEM_STATUS, KIND_ORDER, POSTPONEMENT_META, RELEASE_HEALTH_META, RELEASE_STAGE, RELEASE_TYPE_META } from '#shared/domain/labels'
 import { MARKER_KEYS, MARKER_META } from '#shared/domain/markers'
+import { itemProgress } from '#shared/domain/progress'
 import { RELEASE_HEALTH, RELEASE_STAGES, RELEASE_TYPES } from '#shared/domain/vocabulary'
 
 useSeoMeta({ title: 'Como ler o painel · ENSPACE Releases' })
 
 const statuses = [...BOARD_ORDER.filter(s => s !== 'blocked'), 'blocked' as const, 'postponed' as const]
+const progressStatuses = statuses.filter(s => s !== 'postponed')
 </script>
 
 <template>
@@ -100,7 +102,11 @@ const statuses = [...BOARD_ORDER.filter(s => s !== 'blocked'), 'blocked' as cons
           </dl>
         </UPageCard>
 
-        <UPageCard title="Fases da release" variant="subtle">
+        <UPageCard
+          title="Fases da release"
+          description="A fase acompanha os itens: quando algum começa, a release passa a “Em desenvolvimento”; quando todos chegam a testes, “Em homologação”; quando todos ficam prontos, “Pronta para subir”. Se o time de Produto informar uma fase mais avançada, vale a dele."
+          variant="subtle"
+        >
           <dl class="flex flex-col gap-3">
             <div v-for="s in RELEASE_STAGES" :key="s" class="grid gap-1 sm:grid-cols-[13rem_1fr] sm:gap-4">
               <dt>
@@ -163,11 +169,23 @@ const statuses = [...BOARD_ORDER.filter(s => s !== 'blocked'), 'blocked' as cons
         </UPageCard>
 
         <UPageCard
-          title="Como o progresso é calculado"
-          description="Itens “Pronto para release” e “Liberado” contam como concluídos. Itens adiados saem da conta. O painel se atualiza sozinho a cada minuto."
+          title="Como o andamento é calculado"
+          description="Cada release é feita das suas demandas. O andamento de cada item vem do status dele, e o andamento da release é a média dos itens. Itens adiados saem da conta. O painel se atualiza sozinho a cada minuto."
           variant="subtle"
           icon="i-lucide-chart-no-axes-column-increasing"
-        />
+        >
+          <dl class="flex flex-col gap-3">
+            <div v-for="s in progressStatuses" :key="s" class="grid gap-1 sm:grid-cols-[13rem_1fr] sm:gap-4">
+              <dt><ItemStatusBadge :status="s" /></dt>
+              <dd class="text-sm text-muted">
+                {{ itemProgress({ status: s }) }}% do caminho{{ s === 'blocked' ? ' (conta onde parou: em desenvolvimento)' : '' }}
+              </dd>
+            </div>
+          </dl>
+          <p class="text-sm text-muted">
+            Exemplo: com 3 itens, um em desenvolvimento (33%), um em testes (67%) e um pronto (100%), a release está com 67% de andamento.
+          </p>
+        </UPageCard>
       </div>
     </template>
   </UDashboardPanel>

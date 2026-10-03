@@ -38,6 +38,8 @@ const meta = computed(() => [
       :ui="{ root: 'p-2', description: 'text-xs' }"
     />
 
+    <ItemProgress :item="item" />
+
     <div class="flex flex-wrap gap-1">
       <ItemKindBadge :kind="item.kind" />
       <ItemFlags :item="item" class="contents" />

@@ -55,6 +55,7 @@ const facts = computed(() => {
           <p class="text-sm text-muted">
             {{ ITEM_STATUS[item.status].description }}
           </p>
+          <ItemProgress :item="item" steps class="mt-2" />
         </div>
 
         <UAlert

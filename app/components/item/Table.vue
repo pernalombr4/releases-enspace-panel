@@ -9,6 +9,7 @@ const props = defineProps<{ items: ReleaseItem[], version: string, changed: Set<
 const ItemStatusBadge = resolveComponent('ItemStatusBadge')
 const ItemKindBadge = resolveComponent('ItemKindBadge')
 const ItemFlags = resolveComponent('ItemFlags')
+const ItemProgress = resolveComponent('ItemProgress')
 const ULink = resolveComponent('ULink')
 
 const now = useNow({ interval: 30_000 })
@@ -29,6 +30,10 @@ const columns: TableColumn<ReleaseItem>[] = [{
   accessorKey: 'status',
   header: 'Status',
   cell: ({ row }) => h(ItemStatusBadge, { status: row.original.status })
+}, {
+  id: 'progress',
+  header: 'Andamento',
+  cell: ({ row }) => h('div', { class: 'w-28' }, [h(ItemProgress, { item: row.original })])
 }, {
   accessorKey: 'kind',
   header: 'Classificação',

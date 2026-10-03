@@ -29,6 +29,7 @@ export const RELEASE_STAGES = [
   'development',
   'code_freeze',
   'testing',
+  'ready',
   'released'
 ] as const
 export type ReleaseStage = (typeof RELEASE_STAGES)[number]
@@ -71,6 +72,7 @@ const ALIASES = {
     development: ['desenvolvimento', 'em desenvolvimento'],
     code_freeze: ['code freeze', 'congelamento', 'congelada'],
     testing: ['homologacao', 'em homologacao', 'testes', 'em testes', 'qa'],
+    ready: ['pronta', 'pronta para subir', 'pronta para release', 'aguardando subida'],
     released: ['liberada', 'publicada', 'em producao', 'no ar']
   },
   health: {
