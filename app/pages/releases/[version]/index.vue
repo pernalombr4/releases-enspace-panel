@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { hasDetails } from '#shared/domain/calendar'
+import { showsOverview } from '#shared/domain/calendar'
 import type { Release } from '#shared/domain/model'
 
 defineProps<{ release: Release, eyebrow: string }>()
 </script>
 
 <template>
-  <div v-if="hasDetails(release)" class="flex flex-col gap-4 sm:gap-6">
+  <div v-if="showsOverview(release)" class="flex flex-col gap-4 sm:gap-6">
     <ReleaseSummary :release="release" :eyebrow="eyebrow" />
     <ReleaseStats :release="release" />
 
@@ -21,6 +21,6 @@ defineProps<{ release: Release, eyebrow: string }>()
     </div>
   </div>
 
-  <!-- Releases antigas registradas só com versão e data -->
+  <!-- Releases antigas sem itens registrados: resumo e link para as release notes -->
   <ReleaseNoDetails v-else :release="release" />
 </template>

@@ -20,11 +20,19 @@ export function releaseDate(release: Release): string | undefined {
 }
 
 /**
- * Releases antigas podem ter só versão e data; aí não há página de detalhes a mostrar.
- * As que ainda não saíram sempre têm página, mesmo antes de os itens serem publicados.
+ * Há algo a mostrar além da data? Releases antigas podem ter só versão e data;
+ * as que ainda não saíram sempre têm página, mesmo antes de os itens serem publicados.
  */
 export function hasDetails(release: Release): boolean {
-  return release.stage !== 'released' || release.items.length > 0 || Boolean(release.summary) || release.milestones.length > 0
+  return showsOverview(release) || Boolean(release.summary) || release.milestones.length > 0 || Boolean(release.links?.length)
+}
+
+/**
+ * Painel completo (andamento, itens, para as áreas) para releases futuras ou com
+ * itens registrados. Releases antigas sem itens mostram só o resumo e as release notes.
+ */
+export function showsOverview(release: Release): boolean {
+  return release.stage !== 'released' || release.items.length > 0
 }
 
 /** `moved` marca a data original de uma release adiada. */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calendarEntries, hasDetails, originalDateEntries, releaseType, undatedReleases } from './calendar'
+import { calendarEntries, hasDetails, originalDateEntries, releaseType, showsOverview, undatedReleases } from './calendar'
 import { ReleasesFileSchema, ReleaseSchema } from './model'
 
 describe('releaseType', () => {
@@ -64,5 +64,18 @@ describe('originalDateEntries', () => {
     expect(originalDateEntries(releases).map(e => [e.date, e.release.version, e.status])).toEqual([
       ['2026-09-29', '3.1', 'moved']
     ])
+  })
+})
+
+describe('releases antigas com resumo', () => {
+  it('têm página de resumo, sem o painel de andamento', () => {
+    const release = ReleaseSchema.parse({
+      version: '3.0',
+      releasedAt: '2026-08-25',
+      summary: 'Destaques da release.',
+      links: [{ label: 'Release notes', url: 'https://exemplo.com/release-3-0-0' }]
+    })
+    expect(hasDetails(release)).toBe(true)
+    expect(showsOverview(release)).toBe(false)
   })
 })
