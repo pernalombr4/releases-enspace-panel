@@ -9,7 +9,7 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
-    "typecheck": "nuxt typecheck",
+    "typecheck": "nuxt typecheck && tsc -p scripts/tsconfig.json",
     "test": "vitest run",
     "demo:data": "tsx scripts/encrypt-data.ts --demo fixtures/demo.json public/data/releases.enc.json",
     "encrypt": "tsx scripts/encrypt-data.ts"
@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.17.0",
+    "@types/node": "^22.20.5",
     "eslint": "^10.11.0",
     "eslint-plugin-better-tailwindcss": "^4.7.0",
     "tsx": "^4.23.15",

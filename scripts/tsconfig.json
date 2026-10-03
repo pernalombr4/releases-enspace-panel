@@ -1,0 +1,17 @@
+{
+  // Os scripts rodam com tsx e ficam fora do typecheck do Nuxt (que cobre app/ e shared/).
+  // Este tsconfig confere os scripts e os testes deles: pnpm typecheck roda os dois.
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "lib": ["ES2023", "DOM"],
+    "types": ["node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["./**/*.ts"]
+}
