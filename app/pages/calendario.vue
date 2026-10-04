@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui'
+import type { EnTableColumn } from '@be-enlighten/enspace-sdk-ui/base'
 import { CalendarDate, getLocalTimeZone, today, type DateValue } from '@internationalized/date'
 import { breakpointsTailwind } from '@vueuse/core'
 import { calendarEntries, hasDetails, originalDateEntries, undatedReleases, type CalendarEntry } from '#shared/domain/calendar'
@@ -92,43 +92,16 @@ function goToday() {
 const history = computed(() => [...entries.value].reverse())
 const undated = computed(() => undatedReleases(releases.value))
 
-const UBadge = resolveComponent('UBadge')
-const UButton = resolveComponent('UButton')
-const ReleaseTypeBadge = resolveComponent('ReleaseTypeBadge')
-
-function detailsCell(entry: CalendarEntry) {
-  return hasDetails(entry.release)
-    ? h(UButton, { to: `/releases/${entry.release.version}`, label: 'Ver detalhes', trailingIcon: 'i-lucide-arrow-right', color: 'neutral', variant: 'ghost', size: 'sm' })
-    : h('span', { class: 'text-xs text-dimmed' }, 'Sem detalhes registrados')
-}
-
-const columns: TableColumn<CalendarEntry>[] = [{
-  accessorKey: 'date',
-  header: 'Data',
-  cell: ({ row }) => h('span', { class: 'whitespace-nowrap' }, formatDayYear(row.original.date))
-}, {
-  id: 'release',
-  header: 'Release',
-  cell: ({ row }) => h('div', { class: 'flex flex-col' }, [
-    h('span', { class: 'font-medium text-highlighted' }, `Release ${row.original.release.version}`),
-    row.original.release.name ? h('span', { class: 'text-xs text-muted' }, row.original.release.name) : null
-  ])
-}, {
-  accessorKey: 'type',
-  header: 'Tipo',
-  cell: ({ row }) => h(ReleaseTypeBadge, { type: row.original.type })
-}, {
-  accessorKey: 'status',
-  header: 'Situação',
-  cell: ({ row }) => {
-    const meta = CALENDAR_STATUS_META[row.original.status]
-    return h(UBadge, { label: meta.label, icon: meta.icon, color: meta.color, variant: 'subtle' })
-  }
-}, {
-  id: 'details',
-  header: '',
-  cell: ({ row }) => h('div', { class: 'text-right' }, detailsCell(row.original))
-}]
+// Histórico em EnTable (SDK do ENSPACE); cada célula sai de um slot #cell-{key}.
+// O slot entrega a linha sem tipo: a situação passa por uma função tipada.
+const statusMeta = (entry: CalendarEntry) => CALENDAR_STATUS_META[entry.status]
+const columns: EnTableColumn[] = [
+  { key: 'date', label: 'Data' },
+  { key: 'release', label: 'Release' },
+  { key: 'type', label: 'Tipo' },
+  { key: 'status', label: 'Situação' },
+  { key: 'details', label: '', align: 'right' }
+]
 </script>
 
 <template>
@@ -321,7 +294,40 @@ const columns: TableColumn<CalendarEntry>[] = [{
           </div>
         </template>
 
-        <UTable :data="history" :columns="columns" />
+        <EnTable :columns="columns" :rows="history">
+          <template #cell-date="{ row }">
+            {{ formatDayYear(row.date) }}
+          </template>
+          <template #cell-release="{ row }">
+            <div class="flex flex-col">
+              <span class="font-medium text-highlighted">Release {{ row.release.version }}</span>
+              <span v-if="row.release.name" class="text-xs text-muted">{{ row.release.name }}</span>
+            </div>
+          </template>
+          <template #cell-type="{ row }">
+            <ReleaseTypeBadge :type="row.type" />
+          </template>
+          <template #cell-status="{ row }">
+            <UBadge
+              :label="statusMeta(row).label"
+              :icon="statusMeta(row).icon"
+              :color="statusMeta(row).color"
+              variant="subtle"
+            />
+          </template>
+          <template #cell-details="{ row }">
+            <UButton
+              v-if="hasDetails(row.release)"
+              :to="`/releases/${row.release.version}`"
+              label="Ver detalhes"
+              trailing-icon="i-lucide-arrow-right"
+              color="neutral"
+              variant="ghost"
+              size="sm"
+            />
+            <span v-else class="text-xs text-dimmed">Sem detalhes registrados</span>
+          </template>
+        </EnTable>
 
         <template v-if="undated.length" #footer>
           <p class="text-sm text-muted">

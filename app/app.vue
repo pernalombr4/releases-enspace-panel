@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { pt_br } from '@nuxt/ui/locale'
-
 const colorMode = useColorMode()
 const color = computed(() => colorMode.value === 'dark' ? '#18181b' : 'white')
 
@@ -21,11 +19,12 @@ useSeoMeta({
 </script>
 
 <template>
-  <UApp :locale="pt_br" :toaster="{ position: 'bottom-right' }">
+  <!-- EnApp (SDK do ENSPACE) abraça o UApp do Nuxt UI e define o idioma dos dois. -->
+  <EnApp locale="pt-BR" :toaster="{ position: 'bottom-right' }">
     <NuxtLoadingIndicator />
 
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
-  </UApp>
+  </EnApp>
 </template>
