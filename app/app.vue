@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const colorMode = useColorMode()
-const color = computed(() => colorMode.value === 'dark' ? '#18181b' : 'white')
+// Fundo do modo escuro com o neutro do ENSPACE (space-900).
+const color = computed(() => colorMode.value === 'dark' ? '#0E0916' : 'white')
 
 useHead({
   meta: [
