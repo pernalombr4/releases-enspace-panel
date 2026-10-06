@@ -127,6 +127,8 @@ export const DEMAND_FIELD_DEFS: Field[] = [
   ]),
   selectField('dev_situacao', [['ds_wip', 'Em andamento'], ['ds_prod', 'Tudo em produção'], ['ds_block', 'Tem item bloqueado']]),
   selectField('risco_release', [['sim', 'Sim'], ['nao', 'Não']]),
+  // Lista "Produtos Enlighten": as 2 opções vistas no workspace em 06/10/2026.
+  selectField('produto', [['en-space', 'ENSPACE'], ['en-ms-plugin', 'Plugin Word']]),
   selectField('alcance', [['al_all', 'Todos os clientes'], ['al_one', 'Um cliente específico'], ['al_tbd', 'A definir']]),
   selectField('origem', [['or_client', 'Cliente'], ['or_internal', 'Interna']]),
   plainField('clientes_solicitantes_n', 'EnlNumber'),

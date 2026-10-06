@@ -8,6 +8,7 @@ import {
   type Postponement,
   type ReleaseItem
 } from '../domain/model'
+import { isSubProduct, type Product } from '../domain/products'
 import type { ItemKind, ItemOrigin, ItemStatus, Level, ReleaseHealth, ReleaseStage, ReleaseType } from '../domain/vocabulary'
 import { describeChoice, isOneOf, matchRule, optionCatalog, type Choice, type OptionCatalog, type OptionRule } from './options'
 import { requestsByDemand } from './requests'
@@ -56,6 +57,8 @@ export const DEMAND_FIELDS = {
   clientCount: 'clientes_solicitantes_n',
   atRisk: 'risco_release',
   owner: 'responsavel_produto_rel',
+  // Produto da demanda (lista "Produtos Enlighten", a mesma dos Chamados).
+  product: 'produto',
   // Sugeridos na seção 5 ("O que é, para as áreas" e "O que muda para o
   // cliente"). Lidos só quando existirem; sem eles o painel mostra só o título.
   summary: 'resumo_areas',
@@ -139,6 +142,18 @@ export const PRIORITY_RULES: readonly OptionRule<Level>[] = [
 export const ORIGIN_RULES: readonly OptionRule<ItemOrigin>[] = [
   { result: 'client', labels: ['Cliente', 'Pedido de cliente', 'Externa', 'Externo'] },
   { result: 'internal', labels: ['Interna', 'Interno', 'Time interno', 'Produto'] }
+]
+
+/**
+ * Produto da demanda → subproduto do item (seção 3). O item de Word Plugin ou
+ * Beni App continua na release do ENSPACE e também aparece na release do
+ * subproduto que sai com ela. Vazio ou ENSPACE: item do ENSPACE. O Beni App
+ * ainda não é opção no workspace (seção 5): a regra pelo rótulo vale quando for.
+ */
+export const PRODUCT_RULES: readonly OptionRule<Product>[] = [
+  { result: 'en-space', labels: ['ENSPACE'], values: ['en-space'] },
+  { result: 'word-plugin', labels: ['Plugin Word', 'Word Plugin', 'Plugin para Word'], values: ['en-ms-plugin'] },
+  { result: 'beni-app', labels: ['Beni App', 'App do Beni'] }
 ]
 
 /** "Risco para a release?" = Sim. */
@@ -469,12 +484,14 @@ function mapDemand(record: DataRecord, context: {
   const rawRisk = fields[DEMAND_FIELDS.atRisk]
   const riskFlag = typeof rawRisk === 'boolean' ? rawRisk : isOneOf(choices.one(record, DEMAND_FIELDS.atRisk), AT_RISK_YES)
   const audience = choices.one(record, DEMAND_FIELDS.audience)
+  const product = choices.mapped(record, DEMAND_FIELDS.product, PRODUCT_RULES, 'conta como item do ENSPACE')
 
   return compact({
     id: record.reference || String(record.id),
     title: title || record.reference || String(record.id),
     kind: choices.mapped(record, DEMAND_FIELDS.kind, KIND_RULES, 'fica sem classificação'),
     status,
+    product: product && isSubProduct(product) ? product : undefined,
     summary: text(fields[DEMAND_FIELDS.summary]),
     customerImpact: text(fields[DEMAND_FIELDS.customerImpact]),
     priority: choices.mapped(record, DEMAND_FIELDS.priority, PRIORITY_RULES, 'fica sem prioridade'),

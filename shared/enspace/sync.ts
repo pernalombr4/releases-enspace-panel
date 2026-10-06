@@ -1,5 +1,7 @@
 import { ITEM_STATUS, RELEASE_STAGE } from '../domain/labels'
-import { checkReleasesFile, compareVersions, type Release, type ReleaseItem } from '../domain/model'
+import { checkReleasesFile, compareReleases, compareVersions, type Release, type ReleaseItem } from '../domain/model'
+import { DEFAULT_PRODUCT, PRODUCTS, PRODUCT_META, isSubProduct, releaseTitle, type Product } from '../domain/products'
+import { canonical } from '../domain/vocabulary'
 import { buildReleases, normalizeVersion, type BuildResult, type EnspaceSnapshot } from './mapping'
 import { PANEL_TIME_ZONE } from './values'
 
@@ -7,7 +9,10 @@ import { PANEL_TIME_ZONE } from './values'
 // mudou. Regras (docs/integracao-enspace.md, seção 6):
 // - versão nos dois lugares: vale a do Enspace;
 // - versão só na base (as releases antigas, por exemplo): continua;
-// - versão cancelada no Enspace: sai, mesmo que esteja na base.
+// - versão cancelada no Enspace: sai, mesmo que esteja na base;
+// - release de subproduto (Word Plugin, Beni App): continua, porque o Enspace
+//   não tem releases de subproduto; os itens dela vêm da release do ENSPACE de
+//   origem, pelo produto de cada demanda.
 // O arquivo gerado é a entrada do schema (antes dos cálculos do painel), igual
 // ao escrito à mão, e passa pela mesma validação de scripts/encrypt-data.ts.
 
@@ -17,6 +22,7 @@ export type ReleaseChange = 'added' | 'removed' | 'changed' | 'unchanged'
 type JsonObject = Record<string, unknown>
 
 export interface ReleaseComparison {
+  product: Product
   version: string
   /** De onde vem a release no resultado; vazio quando ela sai. */
   source?: ReleaseSource
@@ -75,6 +81,12 @@ function releasesOf(file: JsonObject): JsonObject[] {
   return Array.isArray(file.releases) ? file.releases as JsonObject[] : []
 }
 
+/** Produto de uma release ainda no formato do arquivo (vazio é ENSPACE). */
+function rawProduct(raw: JsonObject): Product {
+  const product = raw.product === undefined ? DEFAULT_PRODUCT : canonical('product', raw.product)
+  return Object.hasOwn(PRODUCT_META, String(product)) ? product as Product : DEFAULT_PRODUCT
+}
+
 /**
  * Sincroniza: monta as releases do Enspace, junta com a base e valida o
  * resultado. Lança SyncValidationError se a base ou o resultado forem
@@ -89,15 +101,16 @@ export function syncReleases(snapshot: EnspaceSnapshot, base: unknown, now = new
   const fromEnspace = new Set(build.releases.map(r => r.version))
   const hidden = new Set(build.hiddenVersions)
 
-  const merged: { version: string, release: JsonObject }[] = [
+  const merged: { product: Product, version: string, release: JsonObject }[] = [
     ...releasesOf(baseFile)
       .filter((raw) => {
+        if (isSubProduct(rawProduct(raw))) return true
         const version = normalizeVersion(String(raw.version))
         return !fromEnspace.has(version) && !hidden.has(version)
       })
-      .map(raw => ({ version: String(raw.version), release: raw })),
-    ...build.releases.map(release => ({ version: release.version, release: release as unknown as JsonObject }))
-  ].sort((a, b) => compareVersions(a.version, b.version))
+      .map(raw => ({ product: rawProduct(raw), version: String(raw.version), release: raw })),
+    ...build.releases.map(release => ({ product: DEFAULT_PRODUCT, version: release.version, release: release as unknown as JsonObject }))
+  ].sort(compareReleases)
 
   const releases = merged.map(m => m.release)
   const changed = !sameJson(releasesOf(baseFile), releases)
@@ -114,27 +127,36 @@ export function syncReleases(snapshot: EnspaceSnapshot, base: unknown, now = new
   return { file, changed, build, comparison: compare(baseCheck.data.releases, check.data.releases, releasesOf(baseFile), releases, fromEnspace) }
 }
 
+/** Itens iguais (código e status): a release de subproduto muda quando mudam os itens da de origem. */
+function sameItems(a: Release, b: Release): boolean {
+  const ids = (r: Release) => r.items.map(i => `${i.id}|${i.status}`).sort().join(',')
+  return ids(a) === ids(b)
+}
+
 function compare(before: Release[], after: Release[], rawBefore: JsonObject[], rawAfter: JsonObject[], fromEnspace: Set<string>): ReleaseComparison[] {
-  const key = (version: unknown) => normalizeVersion(String(version))
-  const parsedBefore = new Map(before.map(r => [key(r.version), r]))
-  const parsedAfter = new Map(after.map(r => [key(r.version), r]))
-  const rawB = new Map(rawBefore.map(r => [key(r.version), r]))
-  const rawA = new Map(rawAfter.map(r => [key(r.version), r]))
+  const key = (product: Product, version: unknown) => `${product}:${normalizeVersion(String(version))}`
+  const parsedBefore = new Map(before.map(r => [key(r.product, r.version), r]))
+  const parsedAfter = new Map(after.map(r => [key(r.product, r.version), r]))
+  const rawB = new Map(rawBefore.map(r => [key(rawProduct(r), r.version), r]))
+  const rawA = new Map(rawAfter.map(r => [key(rawProduct(r), r.version), r]))
 
   return [...new Set([...parsedBefore.keys(), ...parsedAfter.keys()])]
     .map((k): ReleaseComparison => {
       const b = parsedBefore.get(k)
       const a = parsedAfter.get(k)
-      const change: ReleaseChange = !b ? 'added' : !a ? 'removed' : sameJson(rawB.get(k), rawA.get(k)) ? 'unchanged' : 'changed'
+      const change: ReleaseChange = !b ? 'added' : !a ? 'removed' : sameJson(rawB.get(k), rawA.get(k)) && sameItems(b, a) ? 'unchanged' : 'changed'
+      const release = (a ?? b)!
       return {
-        version: a?.version ?? b?.version ?? k,
-        source: a ? (fromEnspace.has(a.version) ? 'enspace' : 'manual') : undefined,
+        product: release.product,
+        version: release.version,
+        source: a ? (!isSubProduct(a.product) && fromEnspace.has(a.version) ? 'enspace' : 'manual') : undefined,
         change,
         before: b,
         after: a
       }
     })
-    .sort((x, y) => compareVersions(y.version, x.version))
+    // ENSPACE primeiro; em cada produto, da versão mais nova para a mais antiga.
+    .sort((x, y) => PRODUCTS.indexOf(x.product) - PRODUCTS.indexOf(y.product) || compareVersions(y.version, x.version))
 }
 
 // ---------------------------------------------------------------------------
@@ -228,7 +250,7 @@ export function formatSyncReport(result: SyncResult, options: ReportOptions): st
   lines.push(...table([
     ['Versão', 'Origem', 'Mudança', 'Itens', 'Fase', 'Data'],
     ...comparison.map(c => [
-      c.version,
+      releaseTitle(c).replace(/^Release /, ''),
       c.source === 'enspace' ? 'Enspace' : c.source === 'manual' ? 'manual' : '—',
       CHANGE_LABEL[c.change],
       transition(String(c.before?.items.length ?? 0), String(c.after?.items.length ?? 0), c.change),
@@ -262,13 +284,17 @@ export function formatSyncReport(result: SyncResult, options: ReportOptions): st
 
 function describeChange(c: ReleaseComparison): string[] {
   const { before, after } = c
+  const name = releaseTitle(c).replace(/^Release /, '')
   if (c.change === 'added') {
-    return [`${c.version}: nova, vinda do Enspace (${plural(after?.items.length ?? 0, 'item', 'itens')}).`]
+    return [`${name}: nova, vinda do Enspace (${plural(after?.items.length ?? 0, 'item', 'itens')}).`]
   }
   if (c.change === 'removed') {
-    return [`${c.version}: sai do painel (cancelada no Enspace).`]
+    return [`${name}: sai do painel (cancelada no Enspace).`]
   }
-  const lines = [`${c.version}: ${c.source === 'enspace' ? (before ? 'o Enspace substitui a versão da base' : 'vinda do Enspace') : 'alterada'}.`]
+  const origin = isSubProduct(c.product) ? after?.originVersion ?? before?.originVersion : undefined
+  const lines = [origin
+    ? `${name}: os itens vêm da release ${origin} do ENSPACE, marcados com o produto.`
+    : `${name}: ${c.source === 'enspace' ? (before ? 'o Enspace substitui a versão da base' : 'vinda do Enspace') : 'alterada'}.`]
   const beforeItems = new Map((before?.items ?? []).map(i => [i.id, i]))
   const afterItems = new Map((after?.items ?? []).map(i => [i.id, i]))
   const removed = [...beforeItems.values()].filter(i => !afterItems.has(i.id))

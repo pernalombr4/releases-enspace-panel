@@ -77,6 +77,25 @@ describe('syncReleases', () => {
     expect(result.file).toEqual({ sample: false, updatedAt: '2026-10-03T13:40:00-03:00', releases: [{ version: '3.1', type: 'minor', stage: 'development', items: [] }] })
   })
 
+  it('release de subproduto continua, com os itens que a 3.1 do Enspace marca com o produto', () => {
+    const withWord = {
+      ...base,
+      releases: [
+        ...base.releases.slice(0, 1),
+        { version: '3.1', targetDate: '2026-10-06', items: [{ id: 'A', title: 'Manual', status: 'ready', product: 'word-plugin', updatedAt: '2026-10-01T10:00:00-03:00' }] },
+        { product: 'word-plugin', version: '1.1.0', originVersion: '3.1' }
+      ]
+    }
+    const result = syncReleases(snapshot([{ versao: '3.1.0' }], [{ releaseId: 1, data: { produto: 'en-ms-plugin' } }, { releaseId: 1 }]), withWord, NOW)
+    const releases = result.file.releases as { product?: string, version: string }[]
+    expect(releases.map(r => `${r.product ?? 'en-space'}:${r.version}`)).toEqual(['en-space:3.0', 'en-space:3.1', 'word-plugin:1.1.0'])
+    expect(releases[2]).toBe(withWord.releases[2])
+    const word = result.comparison.find(c => c.product === 'word-plugin')
+    expect(word).toMatchObject({ version: '1.1.0', source: 'manual', change: 'changed' })
+    expect(word?.after?.items.map(i => i.id)).toEqual([ref('DEM', 100)])
+    expect(formatSyncReport(result, { dryRun: true, workspace: 'produtos' })).toContain('Word Plugin 1.1.0: os itens vêm da release 3.1 do ENSPACE, marcados com o produto.')
+  })
+
   it('recusa base inválida', () => {
     expect(() => syncReleases(snapshot([]), { releases: [{ version: '3.1', items: [{ id: 'x' }] }] }, NOW)).toThrow(SyncValidationError)
   })

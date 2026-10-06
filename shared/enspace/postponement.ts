@@ -84,8 +84,10 @@ export function parsePostponements(json: unknown): PostponementUpdate[] {
 export function applyPostponements(releases: Release[], updates: PostponementUpdate[]): Release[] {
   if (!updates.length) return releases
   const byVersion = new Map(updates.map(u => [u.version, u]))
+  // O endpoint fala das releases do ENSPACE; a do subproduto sobe no mesmo dia
+  // que a sua release de origem e segue o mesmo adiamento.
   return releases.map((release) => {
-    const update = byVersion.get(release.version)
+    const update = byVersion.get(release.product === 'en-space' ? release.version : release.originVersion ?? '')
     if (!update) return release
     return {
       ...release,

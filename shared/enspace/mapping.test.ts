@@ -272,6 +272,28 @@ describe('buildReleases: demandas (seção 3)', () => {
     expect(JSON.stringify(releases)).not.toMatch(/cliente X|@cliente\.com/)
   })
 
+  it('produto Plugin Word marca o item como do Word Plugin; ENSPACE ou vazio fica sem produto', () => {
+    const { releases, warnings } = buildReleases(snapshot(base, [
+      demand(10, 1, { produto: 'en-ms-plugin' }),
+      demand(11, 1, { produto: 'en-space' }),
+      demand(12, 1, {})
+    ]))
+    expect(warnings).toEqual([])
+    expect(releases[0]?.items.map(i => i.product)).toEqual(['word-plugin', undefined, undefined])
+  })
+
+  it('produto Beni App vale pelo rótulo quando a opção existir; valor sem regra conta como ENSPACE e avisa', () => {
+    const fields = DEMAND_FIELD_DEFS.map(f => f.refId === 'produto'
+      ? { ...f, options: [...f.options ?? [], { value: 'beni_app', label: 'Beni App' }, { value: 'en-sdk', label: 'SDK' }] }
+      : f)
+    const { releases, warnings } = buildReleases({
+      ...snapshot(base, [demand(10, 1, { produto: 'beni_app' }), demand(11, 1, { produto: 'en-sdk' })]),
+      demands: { items: [demand(10, 1, { produto: 'beni_app' }), demand(11, 1, { produto: 'en-sdk' })], fields }
+    })
+    expect(releases[0]?.items.map(i => i.product)).toEqual(['beni-app', undefined])
+    expect(warnings).toEqual([expect.stringContaining('produto "SDK" (en-sdk) sem regra no painel; conta como item do ENSPACE')])
+  })
+
   it('em risco por risco_release = Sim (seleção ou chave) ou release_estado = Em risco; a release fica Em atenção', () => {
     const { releases } = buildReleases(snapshot(
       [release(1, { versao: '3.1.0', data_hora: '2026-12-01' })],

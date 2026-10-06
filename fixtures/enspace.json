@@ -394,6 +394,23 @@
           ]
         },
         {
+          "id": 126,
+          "refId": "produto",
+          "name": "produto",
+          "label": "Produto",
+          "type": "EnlDropdown",
+          "options": [
+            {
+              "value": "en-space",
+              "label": "ENSPACE"
+            },
+            {
+              "value": "en-ms-plugin",
+              "label": "Plugin Word"
+            }
+          ]
+        },
+        {
           "id": 21,
           "refId": "alcance",
           "name": "alcance",
@@ -492,7 +509,8 @@
               "display": "Pessoa de Produto (PES00000000000000000000000000007)",
               "reference": "PES00000000000000000000000000007"
             },
-            "descricao": "<p>Texto interno com nome de cliente: não vai para o painel</p>"
+            "descricao": "<p>Texto interno com nome de cliente: não vai para o painel</p>",
+            "produto": "en-space"
           }
         },
         {
@@ -513,7 +531,8 @@
             },
             "risco_release": "sim",
             "alcance": "a_definir",
-            "origem": "interna"
+            "origem": "interna",
+            "produto": "en-space"
           }
         },
         {
@@ -532,7 +551,8 @@
               "display": "Hotfix 3.0.4 (REL00000000000000000000000000002)",
               "reference": "REL00000000000000000000000000002"
             },
-            "dev_situacao": "em_andamento"
+            "dev_situacao": "em_andamento",
+            "produto": "en-space"
           }
         },
         {
@@ -549,7 +569,8 @@
               "id": 2,
               "display": "Hotfix 3.0.4 (REL00000000000000000000000000002)",
               "reference": "REL00000000000000000000000000002"
-            }
+            },
+            "produto": "en-space"
           }
         },
         {
@@ -566,7 +587,8 @@
               "id": 2,
               "display": "Hotfix 3.0.4 (REL00000000000000000000000000002)",
               "reference": "REL00000000000000000000000000002"
-            }
+            },
+            "produto": "en-space"
           }
         },
         {
@@ -583,7 +605,8 @@
               "id": 1,
               "display": "Patch 3.0.3 (REL00000000000000000000000000001)",
               "reference": "REL00000000000000000000000000001"
-            }
+            },
+            "produto": "en-space"
           }
         },
         {
