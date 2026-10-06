@@ -47,5 +47,6 @@ const encrypted = await encryptJson(parsed.data, password, salt)
 await mkdir(dirname(output), { recursive: true })
 await writeFile(output, `${JSON.stringify(encrypted)}\n`)
 
-const items = parsed.data.releases.reduce((n, r) => n + r.items.length, 0)
+// Os itens de subproduto aparecem também na release do subproduto: contam 1 vez, na do ENSPACE.
+const items = parsed.data.releases.filter(r => r.product === 'en-space').reduce((n, r) => n + r.items.length, 0)
 console.log(`✔ ${output}: ${parsed.data.releases.length} releases, ${items} itens${demo ? ' (demonstração, senha "demo")' : ''}`)

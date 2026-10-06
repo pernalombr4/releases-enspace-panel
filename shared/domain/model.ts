@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { PRODUCTS, PRODUCT_META, isSubProduct, linkSubProducts, releaseTitle } from './products'
 import { furthestStage, stageFromItems } from './progress'
 import {
   ITEM_KINDS,
@@ -72,6 +73,12 @@ export const ReleaseItemSchema = z.object({
   kind: enumOf('kind', ITEM_KINDS).optional(),
   /** Área do produto (Dashboards, Formulários, Integrações...). */
   module: optionalText,
+  /**
+   * Subproduto do item (word-plugin ou beni-app), só em release do ENSPACE.
+   * O item continua nesta release e também aparece na release do subproduto
+   * que sai com ela. Vazio: item do ENSPACE.
+   */
+  product: enumOf('product', PRODUCTS).optional(),
   status: enumOf('status', ITEM_STATUSES),
   priority: enumOf('level', LEVELS).optional(),
   impact: enumOf('level', LEVELS).optional(),
@@ -116,7 +123,14 @@ export const PostponementSchema = z.object({
 })
 
 export const ReleaseSchema = z.object({
+  /** en-space (padrão), word-plugin ou beni-app. Cada produto tem a sua numeração. */
+  product: enumOf('product', PRODUCTS).default('en-space'),
   version: z.string().min(1),
+  /**
+   * Só para subproduto: a versão da release do ENSPACE com que ela sai, ex.: "3.1".
+   * Dela vêm os itens (os marcados com este produto), as datas e o adiamento.
+   */
+  originVersion: optionalText,
   /** major, minor ou patch. Quando vazio, é deduzido da versão (3.0 → major, 3.1 → minor, 3.1.2 → patch). */
   type: enumOf('releaseType', RELEASE_TYPES).optional(),
   name: optionalText,
@@ -152,7 +166,7 @@ export const ReleasesFileSchema = z.object({
   /** Quando o time de Produto atualizou o arquivo pela última vez. */
   updatedAt: timestamp.optional(),
   releases: z.array(ReleaseSchema)
-})
+}).transform(file => ({ ...file, releases: linkSubProducts(file.releases) }))
 
 export type Link = z.infer<typeof LinkSchema>
 export type Ticket = z.infer<typeof TicketSchema>
@@ -181,14 +195,48 @@ export function checkReleasesFile(json: unknown): FileCheck {
   const parsed = ReleasesFileSchema.safeParse(json)
   if (!parsed.success) return { success: false, error: `campos inválidos:\n${describeIssues(parsed.error)}` }
 
+  const releases = parsed.data.releases
+  const raw = (json as { releases: ({ items?: unknown[] } | undefined)[] }).releases
   const repeated = (values: string[]) => [...new Set(values.filter((v, i) => values.indexOf(v) !== i))]
-  const versions = repeated(parsed.data.releases.map(r => r.version))
-  if (versions.length) return { success: false, error: `versões repetidas: ${versions.join(', ')}` }
-  for (const release of parsed.data.releases) {
-    const ids = repeated(release.items.map(i => i.id))
-    if (ids.length) return { success: false, error: `IDs repetidos na release ${release.version}: ${ids.join(', ')}` }
+  for (const product of PRODUCTS) {
+    const versions = repeated(releases.filter(r => r.product === product).map(r => r.version))
+    if (versions.length) {
+      const where = isSubProduct(product) ? ` no ${PRODUCT_META[product].label}` : ''
+      return { success: false, error: `versões repetidas${where}: ${versions.join(', ')}` }
+    }
+  }
+
+  const origins = new Set(releases.filter(r => !isSubProduct(r.product)).map(r => r.version))
+  const linked = new Map<string, string>()
+  for (const [index, release] of releases.entries()) {
+    const name = releaseTitle(release)
+    if (!isSubProduct(release.product)) {
+      if (release.originVersion) return { success: false, error: `${name}: originVersion só vale para release de subproduto` }
+      const ids = repeated(release.items.map(i => i.id))
+      if (ids.length) return { success: false, error: `IDs repetidos na release ${release.version}: ${ids.join(', ')}` }
+      continue
+    }
+    if (!release.originVersion) return { success: false, error: `${name}: informe em originVersion a release do ENSPACE com que ela sai` }
+    if (!origins.has(release.originVersion)) {
+      return { success: false, error: `${name}: a release ${release.originVersion} do ENSPACE (originVersion) não está no arquivo` }
+    }
+    // Os itens do subproduto moram na release do ENSPACE; aqui eles só aparecem.
+    if (raw[index]?.items?.length) {
+      return { success: false, error: `${name}: os itens ficam na release ${release.originVersion} do ENSPACE, com "product": "${release.product}"` }
+    }
+    const pair = `${release.product}:${release.originVersion}`
+    const other = linked.get(pair)
+    if (other) {
+      return { success: false, error: `${other} e ${name} saem da mesma release ${release.originVersion} do ENSPACE; é 1 release do subproduto por release do ENSPACE` }
+    }
+    linked.set(pair, name)
   }
   return { success: true, data: parsed.data }
+}
+
+/** Ordem de exibição: ENSPACE, Word Plugin, Beni App; dentro de cada produto, pela versão. */
+export function compareReleases(a: Pick<Release, 'product' | 'version'>, b: Pick<Release, 'product' | 'version'>): number {
+  return PRODUCTS.indexOf(a.product) - PRODUCTS.indexOf(b.product) || compareVersions(a.version, b.version)
 }
 
 /** Compara versões "3.10" > "3.2" numericamente. */

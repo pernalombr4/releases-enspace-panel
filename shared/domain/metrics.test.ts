@@ -98,6 +98,9 @@ describe('defaultRelease', () => {
       release({ version: '3.2', stage: 'planning' })
     ]
     expect(defaultRelease(rs)?.version).toBe('3.1')
+    const word = [...rs, release({ product: 'word-plugin', version: '1.0.0', stage: 'released' })]
+    expect(defaultRelease(word, 'word-plugin')?.version).toBe('1.0.0')
+    expect(defaultRelease(word, 'beni-app')).toBeUndefined()
   })
 })
 
@@ -107,7 +110,7 @@ describe('changedItemIds', () => {
     const after = [
       release({ items: [item('a', 'testing', '2026-10-02T10:00:00Z'), item('b', 'planned')] })
     ]
-    expect([...changedItemIds(before, after)]).toEqual(['3.1:a'])
+    expect([...changedItemIds(before, after)]).toEqual(['en-space:3.1:a'])
   })
 })
 

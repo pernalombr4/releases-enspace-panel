@@ -1,4 +1,5 @@
 import type { Milestone, Release, ReleaseItem } from './model'
+import { itemKey, type Product } from './products'
 import { itemProgress } from './progress'
 import type { ItemKind, ItemStatus, ReleaseHealth } from './vocabulary'
 import { ITEM_KINDS, ITEM_STATUSES } from './vocabulary'
@@ -94,19 +95,24 @@ export function isMilestoneDone(milestone: Milestone, now: Date): boolean {
   return milestone.done ?? daysUntil(milestone.date, now) < 0
 }
 
-/** Release a destacar por padrão: a primeira ainda não liberada. */
-export function defaultRelease(releases: Release[]): Release | undefined {
-  return releases.find(r => r.stage !== 'released') ?? releases[releases.length - 1]
+/**
+ * Release a destacar por padrão: a primeira ainda não liberada do produto
+ * (as releases chegam em ordem de versão). Sem produto, a do ENSPACE.
+ */
+export function defaultRelease(releases: Release[], product: Product = 'en-space'): Release | undefined {
+  const own = releases.filter(r => r.product === product)
+  return own.find(r => r.stage !== 'released') ?? own[own.length - 1]
 }
 
 export interface ItemUpdate {
   item: ReleaseItem
-  version: string
+  release: Release
 }
 
+/** Últimas movimentações nas releases recebidas (filtre antes pelo produto). */
 export function recentUpdates(releases: Release[], limit: number): ItemUpdate[] {
   return releases
-    .flatMap(release => release.items.map(item => ({ item, version: release.version })))
+    .flatMap(release => release.items.map(item => ({ item, release })))
     .sort((a, b) => Date.parse(b.item.updatedAt) - Date.parse(a.item.updatedAt))
     .slice(0, limit)
 }
@@ -118,12 +124,12 @@ export function itemSignature(item: ReleaseItem): string {
 
 export function changedItemIds(previous: Release[], next: Release[]): Set<string> {
   const before = new Map<string, string>()
-  for (const r of previous) for (const i of r.items) before.set(`${r.version}:${i.id}`, itemSignature(i))
+  for (const r of previous) for (const i of r.items) before.set(itemKey(r, i.id), itemSignature(i))
 
   const changed = new Set<string>()
   for (const r of next) {
     for (const i of r.items) {
-      const key = `${r.version}:${i.id}`
+      const key = itemKey(r, i.id)
       const sig = before.get(key)
       if (sig !== undefined && sig !== itemSignature(i)) changed.add(key)
       if (sig === undefined && previous.length > 0) changed.add(key)

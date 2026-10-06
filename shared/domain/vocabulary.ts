@@ -80,6 +80,13 @@ const ALIASES = {
     at_risk: ['em atencao', 'atencao', 'em risco', 'risco'],
     delayed: ['atrasada', 'atrasado', 'atraso']
   },
+  // Produto da release ou do item (release.project das release notes). Inclui o
+  // valor do campo "produto" das Demandas e Chamados do workspace (en-ms-plugin).
+  product: {
+    'en-space': ['enspace', 'plataforma'],
+    'word-plugin': ['word', 'plugin word', 'plugin para word', 'plugin do word', 'plugin do enspace para word', 'en ms plugin'],
+    'beni-app': ['beni', 'app do beni', 'aplicativo do beni', 'beni aplicativo']
+  },
   releaseType: {
     major: ['maior', 'principal'],
     minor: ['menor', 'intermediaria'],
