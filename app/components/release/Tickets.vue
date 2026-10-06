@@ -49,7 +49,7 @@ const columns: EnTableColumn[] = [
       <template #cell-items="{ row }">
         <div class="flex flex-col gap-1.5">
           <div v-for="item in row.items" :key="item.id" class="flex flex-col items-start gap-1">
-            <ULink :to="itemLink(release.version, item.id)" class="text-sm">
+            <ULink :to="itemLink(release, item.id)" class="text-sm">
               <span class="font-mono text-xs text-muted">{{ item.id }} </span>{{ item.title }}
             </ULink>
             <ItemStatusBadge :status="item.status" size="sm" />

@@ -100,7 +100,7 @@ const groups = computed(() => {
         <ul class="ps-4">
           <li v-for="item in group.items" :key="item.id">
             <UButton
-              :to="itemLink(release.version, item.id)"
+              :to="itemLink(release, item.id)"
               color="neutral"
               variant="ghost"
               size="sm"

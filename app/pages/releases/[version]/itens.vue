@@ -3,6 +3,8 @@ import { plural } from '#shared/domain/format'
 import { BOARD_ORDER, ITEM_KIND, ITEM_STATUS, KIND_ORDER } from '#shared/domain/labels'
 import { MARKER_KEYS, MARKER_META, hasMarker, type MarkerKey } from '#shared/domain/markers'
 import type { Release, ReleaseItem } from '#shared/domain/model'
+import { PRODUCTS, PRODUCT_META, itemKey } from '#shared/domain/products'
+import { PRODUCT_QUERY } from '~/composables/useProductFilter'
 import { ticketSearchText } from '#shared/domain/tickets'
 import { ITEM_STATUSES, simplify } from '#shared/domain/vocabulary'
 
@@ -30,6 +32,7 @@ const kind = queryRef('tipo', ALL)
 const area = queryRef('area', ALL)
 const status = queryRef('status', ALL)
 const marker = queryRef('marcador', ALL)
+const product = queryRef('produto', ALL)
 const view = queryRef('visao', 'quadro')
 
 const kindItems = computed(() => [
@@ -45,6 +48,12 @@ const areaItems = computed(() => [
   { label: 'Todas as áreas', value: ALL },
   ...[...new Set(props.release.items.map(i => i.module).filter((m): m is string => Boolean(m)))].sort().map(m => ({ label: m, value: m }))
 ])
+// Na release do ENSPACE com itens de subproduto: filtro por produto.
+const itemProduct = (item: ReleaseItem) => item.product ?? 'en-space'
+const productItems = computed(() => [
+  { label: 'Todos os produtos', value: ALL },
+  ...PRODUCTS.filter(p => props.release.items.some(i => itemProduct(i) === p)).map(p => ({ label: PRODUCT_META[p].label, value: PRODUCT_QUERY[p], icon: PRODUCT_META[p].icon }))
+])
 const statusItems = [
   { label: 'Todos os status', value: ALL },
   ...ITEM_STATUSES.map(s => ({ label: ITEM_STATUS[s].label, value: s }))
@@ -59,8 +68,9 @@ function matches(item: ReleaseItem) {
   if (area.value !== ALL && item.module !== area.value) return false
   if (status.value !== ALL && item.status !== status.value) return false
   if (marker.value !== ALL && !hasMarker(item, marker.value as MarkerKey)) return false
+  if (product.value !== ALL && PRODUCT_QUERY[itemProduct(item)] !== product.value) return false
   if (search.value) {
-    const haystack = simplify([item.id, item.title, item.summary, item.module, item.customerImpact, item.owner, item.requestedBy, item.note, item.audience, ticketSearchText(item)].filter(Boolean).join(' '))
+    const haystack = simplify([item.id, item.title, item.summary, item.module, item.customerImpact, item.owner, item.requestedBy, item.note, item.audience, item.product && PRODUCT_META[item.product].label, ticketSearchText(item)].filter(Boolean).join(' '))
     return simplify(search.value).split(' ').every(term => haystack.includes(term))
   }
   return true
@@ -71,7 +81,7 @@ const byRecent = (a: ReleaseItem, b: ReleaseItem) => Date.parse(b.updatedAt) - D
 const filtered = computed(() => props.release.items.filter(matches))
 const scoped = computed(() => filtered.value.filter(i => i.status !== 'postponed'))
 const postponed = computed(() => filtered.value.filter(i => i.status === 'postponed'))
-const hasFilters = computed(() => Boolean(search.value) || [kind, area, status, marker].some(f => f.value !== ALL))
+const hasFilters = computed(() => Boolean(search.value) || [kind, area, status, marker, product].some(f => f.value !== ALL))
 
 // A coluna de bloqueados só aparece quando há algum.
 const columns = computed(() => BOARD_ORDER
@@ -82,10 +92,10 @@ const listItems = computed(() => [...scoped.value]
   .sort((a, b) => BOARD_ORDER.indexOf(a.status) - BOARD_ORDER.indexOf(b.status) || byRecent(a, b)))
 
 function clearFilters() {
-  router.replace({ query: { ...route.query, busca: undefined, tipo: undefined, area: undefined, status: undefined, marcador: undefined } })
+  router.replace({ query: { ...route.query, busca: undefined, tipo: undefined, area: undefined, status: undefined, marcador: undefined, produto: undefined } })
 }
 
-const isChanged = (id: string) => changed.value.has(`${props.release.version}:${id}`)
+const isChanged = (id: string) => changed.value.has(itemKey(props.release, id))
 </script>
 
 <template>
@@ -100,6 +110,12 @@ const isChanged = (id: string) => changed.value.has(`${props.release.version}:${
       <USelect v-model="kind" :items="kindItems" class="min-w-44" />
       <USelect v-model="status" :items="statusItems" class="min-w-44" />
       <USelect v-model="marker" :items="markerItems" class="min-w-44" />
+      <USelect
+        v-if="productItems.length > 2"
+        v-model="product"
+        :items="productItems"
+        class="min-w-44"
+      />
       <USelect
         v-if="areaItems.length > 1"
         v-model="area"
@@ -157,7 +173,7 @@ const isChanged = (id: string) => changed.value.has(`${props.release.version}:${
             v-for="item in column.items"
             :key="item.id"
             :item="item"
-            :version="release.version"
+            :release="release"
             :changed="isChanged(item.id)"
           />
           <p v-if="!column.items.length" class="px-1 py-4 text-center text-xs text-dimmed">
@@ -169,7 +185,7 @@ const isChanged = (id: string) => changed.value.has(`${props.release.version}:${
       <ItemTable
         v-else-if="scoped.length"
         :items="listItems"
-        :version="release.version"
+        :release="release"
         :changed="changed"
       />
 
@@ -184,7 +200,7 @@ const isChanged = (id: string) => changed.value.has(`${props.release.version}:${
           :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
         />
         <template #content>
-          <ItemTable :items="postponed" :version="release.version" :changed="changed" />
+          <ItemTable :items="postponed" :release="release" :changed="changed" />
         </template>
       </UCollapsible>
     </template>

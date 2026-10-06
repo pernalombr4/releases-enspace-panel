@@ -14,7 +14,7 @@ defineProps<{ release: Release, eyebrow: string }>()
       <ReleaseDistribution :release="release" />
       <div class="flex flex-col gap-4 sm:gap-6">
         <ReleaseTimeline :release="release" />
-        <ReleaseRecentUpdates />
+        <ReleaseRecentUpdates :product="release.product" />
       </div>
     </div>
 

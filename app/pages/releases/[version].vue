@@ -2,39 +2,50 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { formatCountdown, formatDay } from '#shared/domain/format'
 import { isPostponed, scopedItems } from '#shared/domain/metrics'
+import { PRODUCT_META, releasePath, releaseTitle } from '#shared/domain/products'
 
-const route = useRoute()
-const { data, releases, nextRelease } = useReleases()
+// O ENSPACE fica em /releases/3.1; os subprodutos, em /releases/word/1.1.0 e
+// /releases/beni/1.1.0, os mesmos trechos das releases no portal de documentação.
+definePageMeta({ path: '/releases/:product(word|beni)?/:version' })
+
+const { data, nextOf } = useReleases()
+const { product, version, release } = useRouteRelease()
+const { selected } = useProductFilter()
 const now = useNow({ interval: 60_000 })
 
-const version = computed(() => String(route.params.version))
-const release = computed(() => releases.value.find(r => r.version === version.value))
+const title = computed(() => product.value && version.value ? releaseTitle({ product: product.value, version: version.value }) : 'Release')
+const path = computed(() => product.value && version.value ? releasePath({ product: product.value, version: version.value }) : '/')
+
+// Quem escolheu um produto no menu e abre a release de outro passa a ver o menu desse outro.
+watch(product, (value) => {
+  if (value && selected.value !== 'all' && selected.value !== value) selected.value = value
+}, { immediate: true })
 
 const eyebrow = computed(() => {
   if (!release.value) return ''
   if (release.value.stage === 'released') return 'Liberada'
-  return release.value.version === nextRelease.value?.version ? 'Próxima release' : 'Em seguida'
+  return release.value.version === nextOf(release.value.product)?.version ? 'Próxima release' : 'Em seguida'
 })
 
 const links = computed(() => [[{
   label: 'Visão geral',
   icon: 'i-lucide-layout-dashboard',
-  to: `/releases/${version.value}`,
+  to: path.value,
   exact: true
 }, {
   label: 'Itens',
   icon: 'i-lucide-list-checks',
-  to: `/releases/${version.value}/itens`,
+  to: `${path.value}/itens`,
   badge: release.value ? String(scopedItems(release.value).length) : undefined
 }]] satisfies NavigationMenuItem[][])
 
-useSeoMeta({ title: () => `Release ${version.value} · ENSPACE Releases` })
+useSeoMeta({ title: () => `${title.value} · ENSPACE Releases` })
 </script>
 
 <template>
   <UDashboardPanel id="release">
     <template #header>
-      <UDashboardNavbar :title="`Release ${version}`">
+      <UDashboardNavbar :title="title" :icon="product && product !== 'en-space' ? PRODUCT_META[product].icon : undefined">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
@@ -67,7 +78,7 @@ useSeoMeta({ title: () => `Release ${version.value} · ENSPACE Releases` })
       <UEmpty
         v-else-if="data"
         icon="i-lucide-search-x"
-        :title="`A release ${version} não está no painel`"
+        :title="`${title} não está no painel`"
         description="Ela pode ter sido renomeada ou ainda não foi cadastrada."
         :actions="[{ label: 'Ver a próxima release', to: '/' }]"
       />

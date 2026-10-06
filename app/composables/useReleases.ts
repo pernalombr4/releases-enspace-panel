@@ -1,7 +1,8 @@
 import { createSharedComposable, useDocumentVisibility, useIntervalFn } from '@vueuse/core'
 import { WrongKeyError, decryptJson, isEncryptedFile, type EncryptedFile } from '#shared/domain/crypto'
 import { changedItemIds, defaultRelease } from '#shared/domain/metrics'
-import { ReleasesFileSchema, compareVersions, describeIssues, type ReleasesFile } from '#shared/domain/model'
+import { ReleasesFileSchema, compareReleases, describeIssues, type ReleasesFile } from '#shared/domain/model'
+import type { Product } from '#shared/domain/products'
 import { applyPostponements, parsePostponements, type PostponementUpdate } from '#shared/enspace/postponement'
 
 export interface LoadError {
@@ -44,7 +45,7 @@ const _useReleases = () => {
       error.value = { message: 'Os dados publicados têm campos inválidos.', detail: describeIssues(parsed.error) }
       return
     }
-    const next = { ...parsed.data, releases: [...parsed.data.releases].sort((a, b) => compareVersions(a.version, b.version)) }
+    const next = { ...parsed.data, releases: [...parsed.data.releases].sort(compareReleases) }
     if (data.value) {
       const diff = changedItemIds(data.value.releases, next.releases)
       if (diff.size) changed.value = diff
@@ -113,9 +114,12 @@ const _useReleases = () => {
   })
 
   const releases = computed(() => applyPostponements(data.value?.releases ?? [], postponements.value))
+  /** Próxima release do ENSPACE. */
   const nextRelease = computed(() => defaultRelease(releases.value))
+  /** Próxima release de um produto (a última, se todas já saíram). */
+  const nextOf = (product: Product) => defaultRelease(releases.value, product)
 
-  return { file, data, releases, nextRelease, error, loading, fetchedAt, changed, refresh, fetchFile }
+  return { file, data, releases, nextRelease, nextOf, error, loading, fetchedAt, changed, refresh, fetchFile }
 }
 
 export const useReleases = createSharedComposable(_useReleases)

@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { formatDateTime, formatRelative } from '#shared/domain/format'
 import { IMPACT_LABEL, ITEM_ORIGIN_LABEL, ITEM_STATUS, PRIORITY_LABEL } from '#shared/domain/labels'
+import { releaseTitle } from '#shared/domain/products'
 
 const route = useRoute()
 const router = useRouter()
-const { releases } = useReleases()
+const { release } = useRouteRelease()
 const now = useNow({ interval: 30_000 })
 
-const version = computed(() => typeof route.params.version === 'string' ? route.params.version : undefined)
 const item = computed(() => {
   const id = route.query.item
-  if (typeof id !== 'string' || !version.value) return undefined
-  return releases.value.find(r => r.version === version.value)?.items.find(i => i.id === id)
+  if (typeof id !== 'string') return undefined
+  return release.value?.items.find(i => i.id === id)
 })
 
 const open = computed({
@@ -43,7 +43,7 @@ const facts = computed(() => {
   <USlideover
     v-model:open="open"
     :title="item?.title"
-    :description="item ? `${item.id} · Release ${version}` : undefined"
+    :description="item && release ? `${item.id} · ${releaseTitle(release)}` : undefined"
   >
     <template v-if="item" #body>
       <div class="flex flex-col gap-5">
@@ -51,6 +51,7 @@ const facts = computed(() => {
           <div class="flex flex-wrap gap-2">
             <ItemStatusBadge :status="item.status" />
             <ItemKindBadge :kind="item.kind" />
+            <ItemProductBadge :product="item.product" size="md" />
           </div>
           <p class="text-sm text-muted">
             {{ ITEM_STATUS[item.status].description }}

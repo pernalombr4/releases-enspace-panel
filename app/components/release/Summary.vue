@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { formatDateTime, formatDayYear } from '#shared/domain/format'
 import type { Release } from '#shared/domain/model'
+import { releaseTitle } from '#shared/domain/products'
 
 const props = defineProps<{ release: Release, eyebrow: string }>()
 
@@ -19,7 +20,7 @@ const postponedText = computed(() => {
 
 <template>
   <UPageCard
-    :title="release.name ? `Release ${release.version} · ${release.name}` : `Release ${release.version}`"
+    :title="release.name ? `${releaseTitle(release)} · ${release.name}` : releaseTitle(release)"
     :description="release.summary"
     variant="subtle"
   >
@@ -29,6 +30,7 @@ const postponedText = computed(() => {
 
     <div class="flex flex-col gap-3">
       <ReleaseBadges :release="release" />
+      <ReleaseCompanions :release="release" />
       <UAlert
         v-if="postponedText"
         color="warning"

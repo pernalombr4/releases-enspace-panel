@@ -2,9 +2,10 @@
 import type { EnTableColumn } from '@be-enlighten/enspace-sdk-ui/base'
 import { formatRelative } from '#shared/domain/format'
 import { IMPACT_LABEL } from '#shared/domain/labels'
-import type { ReleaseItem } from '#shared/domain/model'
+import type { Release, ReleaseItem } from '#shared/domain/model'
+import { itemKey } from '#shared/domain/products'
 
-const props = defineProps<{ items: ReleaseItem[], version: string, changed: Set<string> }>()
+const props = defineProps<{ items: ReleaseItem[], release: Release, changed: Set<string> }>()
 
 const now = useNow({ interval: 30_000 })
 const { itemLink } = useItemLink()
@@ -24,7 +25,7 @@ const columns: EnTableColumn[] = [
 const columnSizing = { title: 320, status: 160, progress: 120, kind: 130, module: 130, impact: 90, updatedAt: 130 }
 
 // O slot do EnTable entrega a linha sem tipo: os acessos passam por funções tipadas.
-const isChanged = (item: ReleaseItem) => props.changed.has(`${props.version}:${item.id}`)
+const isChanged = (item: ReleaseItem) => props.changed.has(itemKey(props.release, item.id))
 const impactLabel = (item: ReleaseItem) => item.impact ? IMPACT_LABEL[item.impact] : '—'
 </script>
 
@@ -37,11 +38,14 @@ const impactLabel = (item: ReleaseItem) => item.impact ? IMPACT_LABEL[item.impac
   >
     <template #cell-title="{ row }">
       <div class="flex flex-col gap-1.5">
-        <ULink :to="itemLink(version, row.id)" class="flex flex-col">
+        <ULink :to="itemLink(release, row.id)" class="flex flex-col">
           <span class="font-mono text-xs text-muted">{{ row.id }}</span>
           <span class="font-medium text-highlighted">{{ row.title }}</span>
         </ULink>
-        <ItemFlags :item="row" />
+        <div class="flex flex-wrap gap-1">
+          <ItemProductBadge v-if="release.product === 'en-space'" :product="row.product" />
+          <ItemFlags :item="row" class="contents" />
+        </div>
         <span v-if="row.movedTo" class="text-xs text-muted">Movido para a {{ row.movedTo }}</span>
       </div>
     </template>

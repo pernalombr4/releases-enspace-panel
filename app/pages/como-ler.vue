@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { BOARD_ORDER, ITEM_KIND, ITEM_STATUS, KIND_ORDER, POSTPONEMENT_META, RELEASE_HEALTH_META, RELEASE_STAGE, RELEASE_TYPE_META } from '#shared/domain/labels'
 import { MARKER_KEYS, MARKER_META } from '#shared/domain/markers'
+import { PRODUCTS, PRODUCT_META } from '#shared/domain/products'
 import { itemProgress } from '#shared/domain/progress'
 import { RELEASE_HEALTH, RELEASE_STAGES, RELEASE_TYPES } from '#shared/domain/vocabulary'
 
@@ -22,6 +23,31 @@ const progressStatuses = statuses.filter(s => s !== 'postponed')
 
     <template #body>
       <div class="mx-auto flex w-full flex-col gap-4 sm:gap-6 lg:max-w-3xl">
+        <UPageCard
+          title="Produtos"
+          description="O painel mostra as releases de 3 produtos, cada um com a sua numeração. No menu, escolha um produto ou veja os 3. O calendário e a busca seguem a escolha."
+          variant="subtle"
+        >
+          <dl class="flex flex-col gap-3">
+            <div v-for="p in PRODUCTS" :key="p" class="grid gap-1 sm:grid-cols-[13rem_1fr] sm:gap-4">
+              <dt>
+                <UBadge
+                  :label="PRODUCT_META[p].label"
+                  :icon="PRODUCT_META[p].icon"
+                  color="neutral"
+                  variant="outline"
+                />
+              </dt>
+              <dd class="text-sm text-muted">
+                {{ PRODUCT_META[p].description }}
+              </dd>
+            </div>
+          </dl>
+          <p class="text-sm text-muted">
+            Um item do Word Plugin ou do Beni App aparece nas 2 releases: na do ENSPACE, com o selo do produto, e na versão do produto que sai com ela. Por exemplo, a correção do chat do plugin está na release 3.1 e no Word Plugin 1.1.0.
+          </p>
+        </UPageCard>
+
         <UPageCard
           title="Status dos itens"
           description="Cada item cotado para uma release passa por estas etapas."

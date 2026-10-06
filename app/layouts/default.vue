@@ -3,9 +3,12 @@ import type { CommandPaletteGroup, CommandPaletteItem, NavigationMenuItem } from
 import { releaseType } from '#shared/domain/calendar'
 import { ITEM_STATUS, RELEASE_TYPE_META } from '#shared/domain/labels'
 import { isPostponed } from '#shared/domain/metrics'
+import type { Release } from '#shared/domain/model'
+import { PRODUCT_META, isSubProduct, releasePath, releaseTitle } from '#shared/domain/products'
 
 const config = useRuntimeConfig()
-const { releases, nextRelease } = useReleases()
+const { releases, nextOf } = useReleases()
+const { selected, products, shows } = useProductFilter()
 const { lock } = usePanelKey()
 const { itemLink } = useItemLink()
 
@@ -14,24 +17,37 @@ const close = () => {
   open.value = false
 }
 
-// O menu mostra só as releases ainda por vir; as já liberadas ficam no calendário.
+function releaseLink(release: Release, badge?: NavigationMenuItem['badge']): NavigationMenuItem {
+  return {
+    label: `Release ${release.version}`,
+    icon: PRODUCT_META[release.product].icon,
+    to: releasePath(release),
+    badge: badge ?? (isPostponed(release)
+      ? { label: 'Adiada', color: 'warning' as const, variant: 'subtle' as const }
+      : release.version === nextOf(release.product)?.version ? 'Próxima' : undefined),
+    onSelect: close
+  }
+}
+
+// O menu mostra, por produto, só as releases ainda por vir; as já liberadas
+// ficam no calendário. Produto sem release prevista mostra a última que saiu.
+const releaseLinks = computed(() => products.value.flatMap((product): NavigationMenuItem[] => {
+  const upcoming = releases.value.filter(r => r.product === product && r.stage !== 'released')
+  const last = nextOf(product)
+  const entries = upcoming.length
+    ? upcoming.map(r => releaseLink(r))
+    : last ? [releaseLink(last, { label: 'Última', color: 'neutral' as const, variant: 'subtle' as const })] : []
+  if (!entries.length) return []
+  return [{ label: PRODUCT_META[product].label, type: 'label' as const }, ...entries]
+}))
+
 const links = computed(() => [
   [{
     label: 'Calendário',
     icon: 'i-lucide-calendar-days',
     to: '/calendario',
     onSelect: close
-  }, ...releases.value
-    .filter(release => release.stage !== 'released')
-    .map(release => ({
-      label: `Release ${release.version}`,
-      icon: 'i-lucide-calendar-range',
-      to: `/releases/${release.version}`,
-      badge: isPostponed(release)
-        ? { label: 'Adiada', color: 'warning' as const, variant: 'subtle' as const }
-        : release.version === nextRelease.value?.version ? 'Próxima' : undefined,
-      onSelect: close
-    }))],
+  }, ...releaseLinks.value],
   [{
     label: 'Como ler o painel',
     icon: 'i-lucide-book-open',
@@ -45,14 +61,17 @@ const links = computed(() => [
   }]
 ] satisfies NavigationMenuItem[][])
 
+// A busca segue o produto escolhido. Com os 3, o item de subproduto aparece uma
+// vez só, na release do ENSPACE (a do subproduto repete os mesmos itens).
+const searchReleases = computed(() => releases.value.filter(r => shows(r.product)))
 const searchGroups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => [{
   id: 'releases',
   label: 'Releases',
-  items: releases.value.map(release => ({
-    label: `Release ${release.version}`,
+  items: searchReleases.value.map(release => ({
+    label: releaseTitle(release),
     suffix: [RELEASE_TYPE_META[releaseType(release)].label, release.name].filter(Boolean).join(' · '),
-    icon: 'i-lucide-calendar-range',
-    to: `/releases/${release.version}`
+    icon: PRODUCT_META[release.product].icon,
+    to: releasePath(release)
   }))
 }, {
   id: 'pages',
@@ -61,12 +80,15 @@ const searchGroups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => [
 }, {
   id: 'items',
   label: 'Itens',
-  items: releases.value.flatMap(release => release.items.map(item => ({
-    label: item.title,
-    suffix: `${item.id} · ${release.version} · ${ITEM_STATUS[item.status].label}`,
-    icon: ITEM_STATUS[item.status].icon,
-    to: itemLink(release.version, item.id)
-  })))
+  items: searchReleases.value
+    .filter(release => selected.value !== 'all' || !isSubProduct(release.product))
+    .flatMap(release => release.items.map(item => ({
+      label: item.title,
+      suffix: [item.id, releaseTitle(release), item.product && isSubProduct(item.product) ? PRODUCT_META[item.product].label : undefined, ITEM_STATUS[item.status].label]
+        .filter(Boolean).join(' · '),
+      icon: ITEM_STATUS[item.status].icon,
+      to: itemLink(release, item.id)
+    })))
 }])
 
 async function signOut() {
@@ -96,6 +118,8 @@ async function signOut() {
       </template>
 
       <template #default="{ collapsed }">
+        <ProductMenu :collapsed="collapsed" />
+
         <UDashboardSearchButton :collapsed="collapsed" label="Buscar item…" class="bg-transparent ring-default" />
 
         <UNavigationMenu

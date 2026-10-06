@@ -5,11 +5,34 @@ import { breakpointsTailwind } from '@vueuse/core'
 import { calendarEntries, hasDetails, originalDateEntries, undatedReleases, type CalendarEntry } from '#shared/domain/calendar'
 import { formatDay, formatDayYear, formatWeekday } from '#shared/domain/format'
 import { CALENDAR_NEW_DATE_META, CALENDAR_STATUS_META, RELEASE_TYPE_META } from '#shared/domain/labels'
+import { PRODUCTS, PRODUCT_META, releaseKey, releasePath, releaseTitle } from '#shared/domain/products'
 import { RELEASE_TYPES, type ReleaseType } from '#shared/domain/vocabulary'
+import { PRODUCT_QUERY, productFilterFromQuery, type ProductFilter } from '~/composables/useProductFilter'
 
 useSeoMeta({ title: 'Calendário · ENSPACE Releases' })
 
-const { releases } = useReleases()
+const route = useRoute()
+const router = useRouter()
+const { releases: allReleases } = useReleases()
+const { selected: productFilter, shows } = useProductFilter()
+
+// Cada produto tem o seu calendário: o filtro é o mesmo seletor do menu e fica
+// na URL (?produto=word), para o link abrir no mesmo produto.
+const fromQuery = productFilterFromQuery(route.query.produto)
+if (fromQuery) productFilter.value = fromQuery
+watch(productFilter, (value) => {
+  router.replace({ query: { ...route.query, produto: value === 'all' ? undefined : PRODUCT_QUERY[value] } })
+}, { immediate: true })
+
+const productItems = [
+  { label: 'Todos os produtos', value: 'all', icon: 'i-lucide-layers' },
+  ...PRODUCTS.map(p => ({ label: PRODUCT_META[p].label, value: p, icon: PRODUCT_META[p].icon }))
+] satisfies { label: string, value: ProductFilter, icon: string }[]
+const productIcon = computed(() => productItems.find(p => p.value === productFilter.value)?.icon)
+
+const releases = computed(() => allReleases.value.filter(r => shows(r.product)))
+const showProduct = computed(() => productFilter.value === 'all')
+const productName = computed(() => productFilter.value === 'all' ? undefined : PRODUCT_META[productFilter.value].label)
 
 // Filtro por tipo: os três começam ligados.
 const activeTypes = ref<ReleaseType[]>([...RELEASE_TYPES])
@@ -95,19 +118,21 @@ const undated = computed(() => undatedReleases(releases.value))
 // Histórico em EnTable (SDK do ENSPACE); cada célula sai de um slot #cell-{key}.
 // O slot entrega a linha sem tipo: a situação passa por uma função tipada.
 const statusMeta = (entry: CalendarEntry) => CALENDAR_STATUS_META[entry.status]
-const columns: EnTableColumn[] = [
+const productLabel = (entry: CalendarEntry) => PRODUCT_META[entry.release.product]
+const columns = computed<EnTableColumn[]>(() => [
   { key: 'date', label: 'Data' },
+  ...showProduct.value ? [{ key: 'product', label: 'Produto' }] : [],
   { key: 'release', label: 'Release' },
   { key: 'type', label: 'Tipo' },
   { key: 'status', label: 'Situação' },
-  { key: 'details', label: '', align: 'right' }
-]
+  { key: 'details', label: '', align: 'right' as const }
+])
 </script>
 
 <template>
   <UDashboardPanel id="calendar">
     <template #header>
-      <UDashboardNavbar title="Calendário de releases">
+      <UDashboardNavbar :title="productName ? `Calendário do ${productName}` : 'Calendário de releases'">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
@@ -137,6 +162,16 @@ const columns: EnTableColumn[] = [
               @click="toggleType(type)"
             />
           </UTooltip>
+        </template>
+
+        <template #right>
+          <USelect
+            v-model="productFilter"
+            :items="productItems"
+            :icon="productIcon"
+            aria-label="Produto"
+            class="min-w-48"
+          />
         </template>
       </UDashboardToolbar>
     </template>
@@ -221,7 +256,7 @@ const columns: EnTableColumn[] = [
           <ul v-if="listEntries.length" class="divide-y divide-default">
             <li
               v-for="entry in listEntries"
-              :key="`${entry.status}:${entry.release.version}`"
+              :key="`${entry.status}:${releaseKey(entry.release)}`"
               class="flex items-start gap-4 p-4"
               :class="{ 'opacity-75': entry.status === 'moved' }"
             >
@@ -239,7 +274,7 @@ const columns: EnTableColumn[] = [
 
               <div class="flex min-w-0 flex-1 flex-col gap-1">
                 <div class="flex flex-wrap items-center gap-1.5">
-                  <span class="font-medium text-highlighted" :class="{ 'line-through': entry.status === 'moved' }">Release {{ entry.release.version }}</span>
+                  <span class="font-medium text-highlighted" :class="{ 'line-through': entry.status === 'moved' }">{{ releaseTitle(entry.release) }}</span>
                   <ReleaseTypeBadge :type="entry.type" />
                   <UBadge
                     :label="listBadge(entry).label"
@@ -261,7 +296,7 @@ const columns: EnTableColumn[] = [
 
               <UButton
                 v-if="hasDetails(entry.release)"
-                :to="`/releases/${entry.release.version}`"
+                :to="releasePath(entry.release)"
                 label="Detalhes"
                 trailing-icon="i-lucide-arrow-right"
                 color="neutral"
@@ -286,7 +321,7 @@ const columns: EnTableColumn[] = [
         <template #header>
           <div>
             <h2 class="font-semibold text-highlighted">
-              Todas as releases
+              {{ productName ? `Todas as releases do ${productName}` : 'Todas as releases' }}
             </h2>
             <p class="text-sm text-muted">
               Histórico e próximas datas, da mais recente para a mais antiga
@@ -298,9 +333,15 @@ const columns: EnTableColumn[] = [
           <template #cell-date="{ row }">
             {{ formatDayYear(row.date) }}
           </template>
+          <template #cell-product="{ row }">
+            <span class="flex items-center gap-1.5">
+              <UIcon :name="productLabel(row).icon" class="size-4 shrink-0 text-muted" />
+              {{ productLabel(row).label }}
+            </span>
+          </template>
           <template #cell-release="{ row }">
             <div class="flex flex-col">
-              <span class="font-medium text-highlighted">Release {{ row.release.version }}</span>
+              <span class="font-medium text-highlighted">{{ releaseTitle(row.release) }}</span>
               <span v-if="row.release.name" class="text-xs text-muted">{{ row.release.name }}</span>
             </div>
           </template>
@@ -318,7 +359,7 @@ const columns: EnTableColumn[] = [
           <template #cell-details="{ row }">
             <UButton
               v-if="hasDetails(row.release)"
-              :to="`/releases/${row.release.version}`"
+              :to="releasePath(row.release)"
               label="Ver detalhes"
               trailing-icon="i-lucide-arrow-right"
               color="neutral"
@@ -332,8 +373,8 @@ const columns: EnTableColumn[] = [
         <template v-if="undated.length" #footer>
           <p class="text-sm text-muted">
             Sem data definida ainda:
-            <span v-for="(release, index) in undated" :key="release.version">
-              {{ index ? ', ' : '' }}Release {{ release.version }}
+            <span v-for="(release, index) in undated" :key="releaseKey(release)">
+              {{ index ? ', ' : '' }}{{ releaseTitle(release) }}
             </span>
           </p>
         </template>

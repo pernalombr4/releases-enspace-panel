@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { formatRelative } from '#shared/domain/format'
 import { IMPACT_LABEL } from '#shared/domain/labels'
-import type { ReleaseItem } from '#shared/domain/model'
+import type { Release, ReleaseItem } from '#shared/domain/model'
 
-const props = defineProps<{ item: ReleaseItem, version: string, changed?: boolean }>()
+const props = defineProps<{ item: ReleaseItem, release: Release, changed?: boolean }>()
 
 const now = useNow({ interval: 30_000 })
 const { itemLink } = useItemLink()
@@ -16,7 +16,7 @@ const meta = computed(() => [
 
 <template>
   <UPageCard
-    :to="itemLink(version, item.id)"
+    :to="itemLink(release, item.id)"
     variant="outline"
     :highlight="changed"
     :ui="{ container: 'p-3 sm:p-3 gap-y-2', title: 'text-sm', description: 'text-xs' }"
@@ -42,6 +42,7 @@ const meta = computed(() => [
 
     <div class="flex flex-wrap gap-1">
       <ItemKindBadge :kind="item.kind" />
+      <ItemProductBadge v-if="release.product === 'en-space'" :product="item.product" />
       <ItemFlags :item="item" class="contents" />
     </div>
 

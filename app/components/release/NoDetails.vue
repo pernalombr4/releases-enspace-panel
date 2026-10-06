@@ -2,6 +2,7 @@
 import { releaseType } from '#shared/domain/calendar'
 import { formatDayYear } from '#shared/domain/format'
 import type { Release } from '#shared/domain/model'
+import { releaseTitle } from '#shared/domain/products'
 
 const props = defineProps<{ release: Release }>()
 
@@ -14,10 +15,12 @@ const when = computed(() => {
 </script>
 
 <template>
-  <UPageCard :title="`Release ${release.version}`" :description="when" variant="subtle">
+  <UPageCard :title="releaseTitle(release)" :description="when" variant="subtle">
     <div class="flex flex-wrap gap-1.5">
       <ReleaseTypeBadge :type="releaseType(release)" />
     </div>
+
+    <ReleaseCompanions :release="release" />
 
     <p v-if="release.summary" class="text-sm text-default">
       {{ release.summary }}

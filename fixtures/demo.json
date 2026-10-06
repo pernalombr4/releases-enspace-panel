@@ -83,7 +83,8 @@
           "owner": "Squad B",
           "beta": true,
           "needsCommunication": true,
-          "updatedAt": "2026-10-02T11:30:00-03:00"
+          "updatedAt": "2026-10-02T11:30:00-03:00",
+          "product": "word-plugin"
         },
         {
           "id": "DEMO-103",
@@ -126,7 +127,8 @@
           "impact": "medium",
           "updatedAt": "2026-10-02T09:20:00-03:00",
           "atRisk": true,
-          "note": "Exemplo de risco: o ganho de desempenho ainda não foi confirmado em homologação."
+          "note": "Exemplo de risco: o ganho de desempenho ainda não foi confirmado em homologação.",
+          "product": "beni-app"
         },
         {
           "id": "DEMO-106",
@@ -161,7 +163,8 @@
           "status": "in_progress",
           "priority": "medium",
           "impact": "medium",
-          "updatedAt": "2026-10-01T14:10:00-03:00"
+          "updatedAt": "2026-10-01T14:10:00-03:00",
+          "product": "word-plugin"
         },
         {
           "id": "DEMO-108",
@@ -274,6 +277,22 @@
       "targetDate": "2027-03-05",
       "name": "Nova geração (exemplo)",
       "summary": "Release major fictícia, para demonstrar o destaque no calendário."
+    },
+    {
+      "product": "word-plugin",
+      "version": "0.1.0",
+      "originVersion": "1.0",
+      "summary": "Primeira versão do plugin para editor de texto (exemplo)."
+    },
+    {
+      "product": "word-plugin",
+      "version": "0.2.0",
+      "originVersion": "1.1"
+    },
+    {
+      "product": "beni-app",
+      "version": "0.1.0",
+      "originVersion": "1.1"
     }
   ]
 }

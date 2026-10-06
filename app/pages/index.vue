@@ -1,9 +1,15 @@
 <script setup lang="ts">
-// A página inicial leva para a próxima release assim que os dados chegam.
-const { data, error, nextRelease } = useReleases()
+import { releasePath } from '#shared/domain/products'
+
+// A página inicial leva para a próxima release do produto escolhido no menu
+// (com os 3 produtos, a do ENSPACE) assim que os dados chegam.
+const { data, error, nextOf } = useReleases()
+const { selected } = useProductFilter()
+
+const nextRelease = computed(() => nextOf(selected.value === 'all' ? 'en-space' : selected.value))
 
 watchEffect(() => {
-  if (nextRelease.value) navigateTo(`/releases/${nextRelease.value.version}`, { replace: true })
+  if (nextRelease.value) navigateTo(releasePath(nextRelease.value), { replace: true })
 })
 </script>
 
