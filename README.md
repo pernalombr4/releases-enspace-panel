@@ -23,6 +23,7 @@ Enquanto `data/releases.enc.json` não existir, a publicação usa os dados fict
 
 ## O que o painel mostra
 
+- **3 produtos:** ENSPACE, Word Plugin e Beni App, cada um com as suas releases. O seletor no topo do menu mostra um produto ou os 3, e o menu, o calendário e a busca seguem a escolha. O ENSPACE fica em `/releases/3.1`; os subprodutos, em `/releases/word/1.1.0` e `/releases/beni/1.1.0`. O item de subproduto aparece nas 2 releases: na do ENSPACE, com o selo do produto, e na do subproduto que sai com ela (`shared/domain/products.ts`).
 - **Visão geral da release:** fase, saúde (no prazo, em atenção ou atrasada), data de subida com contagem regressiva, próximo marco, % de itens prontos, distribuição por status, linha do tempo, pontos de atenção para as áreas e atualizações recentes.
 - **Itens:** quadro por status ou lista, com busca e filtros (tudo fica na URL, para compartilhar a visão), e detalhes do item numa gaveta lateral.
 - **Calendário:** todas as releases (passadas e futuras) num calendário com destaque por tipo (**major** sólido, **minor** suave, **patch** contornado), filtro por tipo, lista do período e histórico completo em tabela. Releases antigas podem ter só versão e data; nesse caso aparecem como "sem detalhes registrados".
