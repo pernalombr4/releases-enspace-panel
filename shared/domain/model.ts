@@ -122,6 +122,22 @@ export const PostponementSchema = z.object({
   announcedAt: timestamp.optional()
 })
 
+/**
+ * Estado da release no registro das releases (REGISTRO_RELEASES.json, o estado
+ * único das release notes do ENSPACE, do Word Plugin e do Beni App), gravado
+ * pelo scripts/apply_registry.py do repositório de dados.
+ */
+export const RegistrySchema = z.object({
+  /** open: recebe card novo; live: o deploy aconteceu; published: as release notes foram publicadas. */
+  state: z.enum(['open', 'live', 'published']),
+  /** Data do deploy (AAAA-MM-DD); o script também a grava em `releasedAt`. */
+  deployedAt: isoDate.optional(),
+  /** Data em que as release notes chegaram ao portal de documentação. */
+  publishedAt: isoDate.optional(),
+  /** Quantos cards de desenvolvimento a release reúne. */
+  cardCount: z.number().int().min(0)
+})
+
 export const ReleaseSchema = z.object({
   /** en-space (padrão), word-plugin ou beni-app. Cada produto tem a sua numeração. */
   product: enumOf('product', PRODUCTS).default('en-space'),
@@ -146,6 +162,8 @@ export const ReleaseSchema = z.object({
   healthNote: optionalText,
   targetDate: isoDate.optional(),
   releasedAt: isoDate.optional(),
+  /** Estado no registro das releases; vem do repositório de dados, nunca editado à mão. */
+  registry: RegistrySchema.optional(),
   /** Adiada ou não. Sem este bloco, o painel não afirma nada sobre adiamento. */
   postponement: PostponementSchema.optional(),
   owner: optionalText,
@@ -172,6 +190,7 @@ export type Link = z.infer<typeof LinkSchema>
 export type Ticket = z.infer<typeof TicketSchema>
 export type Milestone = z.infer<typeof MilestoneSchema>
 export type Postponement = z.infer<typeof PostponementSchema>
+export type RegistryState = z.infer<typeof RegistrySchema>
 export type ReleaseItem = z.infer<typeof ReleaseItemSchema>
 export type Release = z.infer<typeof ReleaseSchema>
 export type ReleasesFile = z.infer<typeof ReleasesFileSchema>
