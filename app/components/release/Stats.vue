@@ -15,6 +15,10 @@ const stats = computed(() => {
 
   const postponed = !released && isPostponed(r)
   const original = r.postponement?.originalDate
+  // Release notes, pelo registro das releases: publicadas (com a data) ou ainda em preparação.
+  const notes = released && r.registry?.publishedAt
+    ? { label: `release notes publicadas em ${formatDay(r.registry.publishedAt)}`, color: 'success' as const }
+    : released && r.registry?.state === 'live' ? { label: 'release notes em preparação', color: 'neutral' as const } : undefined
 
   return [{
     title: released ? 'Liberada em' : postponed ? 'Nova data de subida' : 'Subida prevista',
@@ -22,7 +26,7 @@ const stats = computed(() => {
     value: released && r.releasedAt ? formatDayYear(r.releasedAt) : r.targetDate ? formatDay(r.targetDate) : 'A definir',
     badge: postponed
       ? { label: original ? `adiada · antes ${formatDay(original)}` : 'adiada', color: 'warning' as const }
-      : !released && r.targetDate ? { label: formatCountdown(r.targetDate, now.value), color: 'neutral' as const } : undefined
+      : !released && r.targetDate ? { label: formatCountdown(r.targetDate, now.value), color: 'neutral' as const } : notes
   }, {
     title: 'Andamento',
     icon: 'i-lucide-chart-no-axes-column-increasing',

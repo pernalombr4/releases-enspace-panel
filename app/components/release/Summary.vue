@@ -5,9 +5,10 @@ import { releaseTitle } from '#shared/domain/products'
 
 const props = defineProps<{ release: Release, eyebrow: string }>()
 
+// Depois da subida, o adiamento deixa de ser aviso (igual aos selos e aos números da release).
 const postponedText = computed(() => {
   const info = props.release.postponement
-  if (!info?.postponed) return undefined
+  if (!info?.postponed || props.release.stage === 'released') return undefined
   const from = info.originalDate ? `prevista para ${formatDayYear(info.originalDate)}` : 'prevista'
   const to = props.release.targetDate ? `foi adiada para ${formatDayYear(props.release.targetDate)}` : 'foi adiada; a nova data ainda será definida'
   return [

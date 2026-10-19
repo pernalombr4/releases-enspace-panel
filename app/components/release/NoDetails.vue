@@ -8,6 +8,9 @@ const props = defineProps<{ release: Release }>()
 
 const when = computed(() => {
   const r = props.release
+  if (r.releasedAt && r.registry?.publishedAt) {
+    return `Liberada em ${formatDayYear(r.releasedAt)}. Release notes publicadas em ${formatDayYear(r.registry.publishedAt)}.`
+  }
   if (r.releasedAt) return `Liberada em ${formatDayYear(r.releasedAt)}.`
   if (r.targetDate) return `Prevista para ${formatDayYear(r.targetDate)}.`
   return 'Data ainda não definida.'
