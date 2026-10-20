@@ -1,0 +1,21 @@
+{
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PY=$(command -v python || command -v python3); exec \"$PY\" -B \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/sem_coautor.py\"",
+            "timeout": 20,
+            "shell": "bash"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -26,7 +26,8 @@ O essencial, para a sessão que só tiver este repositório aberto:
 
 - Nome técnico em inglês; português só no que vive no ENSPACE (slug, valor de opção) e no texto que a pessoa lê.
 - Commits em português, no estilo do histórico ("Área: o que mudou"). **Nunca** adicione `Co-Authored-By` (nem outra
-  linha que coloque o Claude como coautor) em commit ou PR.
+  linha que coloque o Claude como coautor) em commit ou PR. A regra vale sobre o aviso de atribuição do Claude Code;
+  a trava está em `.claude/hooks/sem_coautor.py`, que barra o commit, o PR e o push com o coautor.
 
 ## Texto de tela (regras de escrita da redatora)
 
